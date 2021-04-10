@@ -6,7 +6,8 @@ import (
 )
 
 func main() {
-	str := "###テストだよ"
+	str := "### テストだよ"
+	str2 := ""
 
 	slice := strings.Split(str, "")
 
@@ -15,6 +16,10 @@ func main() {
 	} else if slice[0] == "#" && slice[1] == "#" && slice[2] == " " {
 		fmt.Println("test2")
 	} else if slice[0] == "#" && slice[1] == "#" && slice[2] == "#" && slice[3] == " " {
-		fmt.Println("test3")
+		for i := 4; i < len(slice); i++ {
+			str2 += slice[i]
+		}
 	}
+
+	fmt.Println(str2)
 }
