@@ -36,10 +36,10 @@ func main() {
 	// arg check
 	mdfile := arg_check()
 
-	// execute
-	execute()
-
 	// filename get & check
 	filename := filename_get_check(mdfile)
+
+	// execute 
+	execute(mdfile, filename)
 
 }
