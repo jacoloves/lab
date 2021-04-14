@@ -9,7 +9,7 @@ _	"fmt"
 
 func pattern_check(line string, codeline int) (int, string) {
 	br_flg := 0
-	pattern := "P"
+	pattern := ""
 
 	html_line := ""
 	h_string := ""
@@ -70,16 +70,16 @@ func pattern_check(line string, codeline int) (int, string) {
 			html_line += "<h3>"
 			html_line += h_string
 			html_line += "</h3>"
-		case "P":
-			html_line += "<P>"
-			if br_flg == 1 {
-				for i := 0; i < length-3; i++ {
-					html_line += slice[i]
-				}
-			} else {
-				html_line += line
-			}
-			html_line += "</P>"
+		//case "P":
+	  //		html_line += "<p>"
+		//		if br_flg == 1 {
+	  //			for i := 0; i < length-3; i++ {
+		//			html_line += slice[i]
+		//	}
+		//	} else {
+		//		html_line += line
+		//	}
+		//	html_line += "</p>"
 		case "CODE":
 			if codeline == 0 {
 				codeline = 1
