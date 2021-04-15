@@ -2,18 +2,14 @@ package main
 
 import (
 	"bufio"
-_	"fmt"
+	_ "fmt"
 	"os"
 	"strings"
 )
 
 func pattern_check(line string, codeline int) (int, string) {
 	br_flg := 0
-<<<<<<< HEAD
 	pattern := "NONE"
-=======
-	pattern := ""
->>>>>>> 2e4f9e2923aad2152e7bbfb41bb844406fa2c5f7
 
 	html_line := ""
 	h_string := ""
@@ -74,40 +70,29 @@ func pattern_check(line string, codeline int) (int, string) {
 			html_line += "<h3>"
 			html_line += h_string
 			html_line += "</h3>"
-<<<<<<< HEAD
 		case "NONE":
 			if br_flg == 1 {
-	  		for i := 0; i < length-3; i++ {
+				for i := 0; i < length-3; i++ {
 					html_line += slice[i]
 				}
 			} else {
 				html_line += line
 			}
-=======
-		//case "P":
-	  //		html_line += "<p>"
-		//		if br_flg == 1 {
-	  //			for i := 0; i < length-3; i++ {
-		//			html_line += slice[i]
-		//	}
-		//	} else {
-		//		html_line += line
-		//	}
-		//	html_line += "</p>"
->>>>>>> 2e4f9e2923aad2152e7bbfb41bb844406fa2c5f7
 		case "CODE":
 			if codeline == 0 {
 				codeline = 1
+				html_line += "<pre>"
 				html_line += "<code>"
 			} else {
 				codeline = 0
 				html_line += "</code>"
+				html_line += "</pre>"
 			}
 		case "INCODE":
 			rep_line := ""
 			if reg(line) {
-				rep_line = strings.Replace(line, "&lt;", "<", -1)	
-				rep_line = strings.Replace(rep_line, "&gt;", ">", -1)	
+				rep_line = strings.Replace(line, "<", "&lt;", -1)
+				rep_line = strings.Replace(rep_line, ">", "&gt;", -1)
 				html_line += rep_line
 			} else {
 				html_line += line

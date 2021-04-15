@@ -81,41 +81,39 @@
 		white-space: pre-wrap;
 	}
 	
-	pre:not(.hljs),
-	pre.hljs code > div {
-		padding: 16px;
-		border-radius: 3px;
-		overflow: auto;
-	}
-	
 	pre code {
 		color: var(--vscode-editor-foreground);
 		tab-size: 4;
+		display: block;
+		overflow-x: auto;
+		color: #000000;
+		padding: 0.5em;
+		background-color: #f8f8f8;
 	}
 </style>
 <h1>mdファイルをHTMLに変換するツールを作る</h1>
 <h2>mdファイルの規則性を変換する</h2>
-<br>
-<P>規則性に沿って変換することが一番難しかったです。</P><br>
-<P>例えば後ろに「   」のように「半角スペース3つ」空いていた場合は改行なのでbrタグをつけるために文字列の最後の3文字を検索する。</P><br>
-<br>
-<P>「# 」にh1タグを付与してあげなくてはいけないなので文字列の最初の方を検索する。</P>
-<P>このように検索させて変数patternに変換パターンを代入してswitch文によって分岐させることで字句解析をしていく。</P>
-<br>
-<P>下記のようなソースコードで字句解析をしていった。</P><br>
-<code>
+
+規則性に沿って変換することが一番難しかったです。<br>
+例えば後ろに「   」のように「半角スペース3つ」空いていた場合は改行なのでbrタグをつけるために文字列の最後の3文字を検索する。<br>
+
+「# 」にh1タグを付与してあげなくてはいけないなので文字列の最初の方を検索する。
+このように検索させて変数patternに変換パターンを代入してswitch文によって分岐させることで字句解析をしていく。
+
+下記のようなソースコードで字句解析をしていった。<br>
+<pre><code>
 pattern = 'H1'
 
 switch pattern {
     case 'H1':
-        data := '<h1>'
+        data := '&lt;h1&gt;'
         data += smple_string
-        data += '</h1>'
+        data += '&lt;/h1&gt;'
         data += '\n'
     case 'BR':
-        data := '<br>'
+        data := '&lt;br&gt;'
 }
-</code>
-<br>
-<P>このようにswitch文で分岐させ変換しながらデータを1行ずつ格納していく。</P><br>
+</code></pre>
+
+このようにswitch文で分岐させ変換しながらデータを1行ずつ格納していく。<br>
 </body></html>

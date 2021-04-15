@@ -83,16 +83,14 @@ func css() string {
 		white-space: pre-wrap;
 	}
 	
-	pre:not(.hljs),
-	pre.hljs code > div {
-		padding: 16px;
-		border-radius: 3px;
-		overflow: auto;
-	}
-	
 	pre code {
 		color: var(--vscode-editor-foreground);
 		tab-size: 4;
+		display: block;
+		overflow-x: auto;
+		color: #000000;
+		padding: 0.5em;
+		background-color: #f8f8f8;
 	}
 </style>
 `
