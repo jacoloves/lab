@@ -5,10 +5,10 @@ import (
 )
 
 const (
-	HEADING = `</?h[1-6]>`
-	//PARAGRAPH = `</?p>`
-	CODE  = `</?code>`
-	BREAK = `<br\s?/?>`
+	HEADING   = `</?h[1-6]>`
+	PARAGRAPH = `</?p>`
+	CODE      = `</?code>`
+	BREAK     = `<br\s?/?>`
 )
 
 func check_regexp(reg string, str string) bool {
@@ -18,7 +18,7 @@ func check_regexp(reg string, str string) bool {
 
 func reg(text string) bool {
 	reg_flg := false
-	regexp_arr := [...]string{HEADING, CODE, BREAK}
+	regexp_arr := [...]string{HEADING, PARAGRAPH, CODE, BREAK}
 	for _, v := range regexp_arr {
 		reg_flg = check_regexp(v, text)
 		if reg_flg {

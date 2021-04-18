@@ -57,6 +57,10 @@ func pattern_check(line string, codeline int, slice_arr *[]string) (int, string)
 			pattern = "INCODE"
 		}
 
+		if pattern != "NONE" {
+			paragraph(pattern, &html_line, slice_arr)
+		}
+
 		switch pattern {
 		case "H1":
 			html_line += "<h1>"
@@ -79,6 +83,9 @@ func pattern_check(line string, codeline int, slice_arr *[]string) (int, string)
 			} else {
 				html_line += line
 			}
+			html_line += "\n"
+			paragraph(pattern, &html_line, slice_arr)
+
 		case "CODE":
 			if codeline == 0 {
 				codeline = 1
@@ -100,8 +107,9 @@ func pattern_check(line string, codeline int, slice_arr *[]string) (int, string)
 			}
 		}
 
-		html_line += "\n"
-		paragraph(pattern, html_line, slice_arr)
+		if pattern != "NONE" {
+			html_line += "\n"
+		}
 		return codeline, html_line
 	}
 }
@@ -128,6 +136,9 @@ func converte_html(file string) string {
 	if err := scanner.Err(); err != nil {
 		panic(err)
 	}
+
+	tmp_html = last_Paragraph(&slice)
+	html += tmp_html
 
 	return html
 }
