@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func pattern_check(line string, codeline int) (int, string) {
+func pattern_check(line string, codeline int, slice_arr *[]string) (int, string) {
 	br_flg := 0
 	pattern := "NONE"
 
@@ -75,6 +75,7 @@ func pattern_check(line string, codeline int) (int, string) {
 				for i := 0; i < length-3; i++ {
 					html_line += slice[i]
 				}
+				html_line += "<br>"
 			} else {
 				html_line += line
 			}
@@ -99,11 +100,8 @@ func pattern_check(line string, codeline int) (int, string) {
 			}
 		}
 
-		if br_flg == 1 {
-			html_line += "<br>"
-		}
-
 		html_line += "\n"
+		paragraph(pattern, html_line, slice_arr)
 		return codeline, html_line
 	}
 }
@@ -112,6 +110,7 @@ func converte_html(file string) string {
 	// html string
 	html := ""
 	tmp_html := ""
+	var slice []string
 	fp, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -123,7 +122,7 @@ func converte_html(file string) string {
 	scanner := bufio.NewScanner(fp)
 	for scanner.Scan() {
 		line := scanner.Text()
-		code_line, tmp_html = pattern_check(line, code_line)
+		code_line, tmp_html = pattern_check(line, code_line, &slice)
 		html += tmp_html
 	}
 	if err := scanner.Err(); err != nil {

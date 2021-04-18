@@ -1,44 +1,15 @@
 package main
 
-import (
-	"bufio"
-	"os"
-	"strings"
-)
-
-func paragraph_in(line string, slice *[]string) {
-
-	slice := strings.Split(line, "")
-
-	if slice[0] != "#" || slice[0] != "`" || line != "" {
-		if *slice == "" {
-			*slice = append(*slice, "<p>")
-		}
-		*slice = append(*slice, line)
-	}
-
+func is_Empty(s *[]string) bool {
+	return len(*s) == 0
 }
 
-func main() {
+func slice_Delete(s *[]string) {
+	res := []string{}
 
-	mdfile := os.Args[1]
+	*s = res
+}
 
-	var slice []string
-
-	fp, err := os.Open(mdfile)
-	if err != nil {
-		panic(err)
-	}
-
-	defer fp.Close()
-
-	scanner := bufio.NewScanner(fp)
-	for scanner.Scan() {
-		line := scanner.Text()
-		paragraph_in(line, &slice)
-	}
-	if err := scanner.Err(); err != nil {
-		panic(err)
-	}
-
+func paragraph(pattern string, html_line string slice_arr *[]string) {
+	
 }
