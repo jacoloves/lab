@@ -23,6 +23,7 @@
 #define CTRL_KEY(k)((k) & 0x1f)
 
 enum editorKey {
+  BACKSPACE = 127,
   ARROW_LEFT  = 1000,
   ARROW_RIGHT,
   ARROW_UP,
@@ -221,6 +222,25 @@ void editorAppendRow(char *s, size_t len) {
   E.numrows++;
 }
 
+void editorRowInsertChar(erow *row, int at, int c) {
+  if (at < 0 || at > row->size) at = row->size;
+  row->chars = realloc(row->chars, row->size + 2);
+  memmove(&row->chars[at + 1], &row->chars[at], row->size - at + 1);
+  row->size++;
+  row->chars[at] = c;
+  editorUpadateRow(row);
+}
+
+/*** editor operations ***/
+
+void editorInserChar(int c) {
+  if (E.cy == E.numrows) {
+    editorAppendRow("", 0);
+  }
+  editorRowInsertChar(&E.row[E.cy], E.cx, c);
+  E.cx++;
+}
+
 /*** file i/o ***/
 
 void editorOpen(char *filename) {
@@ -337,6 +357,15 @@ void editorDrawStatusBar(struct abuf *ab) {
     }
   }
   abAppend(ab, "\x1b[m", 3);
+  abAppend(ab, "\r\n", 2);
+}
+
+void editorDrawMessageBar(struct abuf *ab) {
+  abAppend(ab, "\x1b[k", 3);
+  int msglen = strlen(E.statusmsg);
+  if (msglen > E.screencols) msglen = E.screencols;
+  if (msglen && time(NULL) - E.statusmsg_time < 5)
+    abAppend(ab, E.statusmsg, msglen);
 }
 
 void editorRefreshScreen() {
@@ -349,6 +378,7 @@ void editorRefreshScreen() {
 
   editorDrawRows(&ab);
   editorDrawStatusBar(&ab);
+  editorDrawMessageBar(&ab);
 
   char buf[32];
   snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1, (E.rx - E.coloff) + 1);
@@ -413,6 +443,10 @@ void editorProcessKeypress() {
   int c = editorReadKey();
 
   switch(c) {
+    case '\r':
+      /* TODO */
+      break;
+
     case CTRL_KEY('q'):
       write(STDOUT_FILENO, "\x1b[2J", 4);
       write(STDOUT_FILENO, "\x1b[H", 3);
@@ -426,6 +460,12 @@ void editorProcessKeypress() {
     case END_KEY:
       if (E.cy < E.numrows)
         E.cx = E.row[E.cy].size;
+      break;
+
+    case BACKSPACE:
+    case CTRL_KEY('h'):
+    case DEL_KEY:
+      /* TODO */
       break;
 
     case PAGE_UP:
@@ -449,6 +489,14 @@ void editorProcessKeypress() {
     case ARROW_RIGHT:
       editorMoveCursor(c);
       break;
+
+    case CTRL_KEY('l'):
+    case '\x1b':
+      break;
+
+    default:
+      editorInserChar(c);
+      break;
   }
 }
 
@@ -467,7 +515,7 @@ void initEditor() {
   E.statusmsg_time = 0;
 
   if (getWindowSize(&E.screenrows, &E.screencols) == -1) die("getWindowSize");
-  E.screenrows -= 1;
+  E.screenrows -= 2;
 }
 
 int main(int argc, char *argv[]) {
