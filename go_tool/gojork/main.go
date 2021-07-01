@@ -45,7 +45,7 @@ func color() {
 }
 
 func main() {
-	file, err := packr.NewBox("./text").Open("gologo.txt")
+	file, err := packr.NewBox("./text").Open("umamusume.txt")
 	if err != nil {
 		panic(err)
 	}
