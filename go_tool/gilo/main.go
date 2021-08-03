@@ -1,26 +1,66 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"syscall"
+	"os"
+	"time"
 )
 
+type Termios struct {
+	Iflag  uint32
+	Oflag  uint32
+	Cflag  uint32
+	Lflag  uint32
+	Cc     [20]byte
+	Ispeed uint32
+	Ospeed uint32
+}
+
+type editorSyntax struct {
+	filetype               string
+	filematch              []string
+	keywords               []string
+	singleLineCommentStart []byte
+	multiLineCommentStart  []byte
+	multiLineCommentEnd    []byte
+	flags                  int
+}
+
+type erow struct {
+	idx           int
+	size          int
+	rsize         int
+	chars         []byte
+	render        []byte
+	hl            []byte
+	hlOpenComment bool
+}
+
+type editorConfig struct {
+	cx             int
+	cy             int
+	rx             int
+	rowoff         int
+	coloff         int
+	screenRows     int
+	screenCols     int
+	numRows        int
+	rows           []erow
+	dirty          bool
+	filename       string
+	statusmsg      string
+	statusmsg_time time.Time
+	syntax         *editorSyntax
+	origTermios    *Termios
+}
+
+var E editorConfig
+
+func TcGetAttr(fd uintptr)
+
+func enableRawMode() {
+	E.origTermios = TcGetAttr(os.Stdin.Fd())
+}
+
 func main() {
-	buf := make([]byte, 'a')
-
-	for {
-		n, err := syscall.Read(1, buf)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Println(int(buf))
-
-		if n == 0 {
-			break
-		}
-	}
-
+	enableRawMode()
 }
