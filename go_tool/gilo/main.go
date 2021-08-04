@@ -2,7 +2,9 @@ package main
 
 import (
 	"os"
+	"syscall"
 	"time"
+	"unsafe"
 )
 
 type Termios struct {
@@ -55,7 +57,15 @@ type editorConfig struct {
 
 var E editorConfig
 
-func TcGetAttr(fd uintptr)
+/*** terminal ***/
+func TcGetAttr(fd uintptr) *Termios {
+	var termios = &Termios{}
+	_, _, err := syscall.Syscall(syscall.SYS_IOCTL, fd, uintptr(syscall.TCSETS+1), uintptr(unsafe.Pointer(termios)))
+	if err != 0 {
+		return err
+	}
+	return nil
+}
 
 func enableRawMode() {
 	E.origTermios = TcGetAttr(os.Stdin.Fd())
