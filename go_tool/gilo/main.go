@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"syscall"
 	"time"
@@ -60,15 +61,25 @@ var E editorConfig
 /*** terminal ***/
 func TcGetAttr(fd uintptr) *Termios {
 	var termios = &Termios{}
-	_, _, err := syscall.Syscall(syscall.SYS_IOCTL, fd, uintptr(syscall.TCSETS+1), uintptr(unsafe.Pointer(termios)))
-	if err != 0 {
-		return err
+	_, _, err := syscall.Syscall(syscall.SYS_IOCTL, fd, syscall.TCGETS, uintptr(unsafe.Pointer(termios))); err != 0 {
+		log.Fatalf("Problem getting terminal attributes: %s\n", err)
 	}
-	return nil
+	return termios
 }
 
 func enableRawMode() {
 	E.origTermios = TcGetAttr(os.Stdin.Fd())
+	var raw Termios
+	raw = *E.origTermios
+	raw.Iflag &^= syscall.BRKINT | syscall.ICRNL | syscall.INPCK | syscall.ISTRIP | syscall.IXON
+	raw.Oflag &^= syscall.OPOST
+	raw.Cflag |= syscall.CS8
+	raw.Lflag &^= syscall.ECHO | syscall.ICANON | syscall.IEXTEN | syscall.ISIG
+	raw.Cc[syscall.VMIN+1] = 0
+	raw.Cc[syscall.VTIME+1] = 1
+	if e := TcSetAttr(os.Stdin.Fd(), &raw); e != nil {
+		log.Fatalf("Problem enabling raw mode: %s\n", e)
+	}
 }
 
 func main() {
