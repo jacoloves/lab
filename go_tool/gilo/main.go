@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"log"
 	"os"
 	"syscall"
@@ -56,9 +58,23 @@ type editorConfig struct {
 	origTermios    *Termios
 }
 
+type WinSize struct {
+	Row uint16
+	Col uint16
+	Xpixel uint16
+	Ypixel uint16
+}
+
 var E editorConfig
 
 /*** terminal ***/
+func TcSetAttr(fd uintptr, termios *Termios) error {
+	if _, _, err := syscall.Syscall(syscall.SYS_IOCTL, fd, uintptr(syscall.TCSETS+1), uintptr(unsafe.Pointer(termios))); err != 0 {
+		return err
+	}
+	return nil
+}
+
 func TcGetAttr(fd uintptr) *Termios {
 	var termios = &Termios{}
 	_, _, err := syscall.Syscall(syscall.SYS_IOCTL, fd, syscall.TCGETS, uintptr(unsafe.Pointer(termios))); err != 0 {
@@ -82,6 +98,36 @@ func enableRawMode() {
 	}
 }
 
+func disableRawMode() {
+	if e := TcSetAttr(os.Stdin.Fd(), E.origTermios); != nil {
+		log.Fatalf("Problem disabling raw mode: %s\n", e)
+	}
+}
+
+func getWindowSize(rows *int, cols *int) int {
+	var w WinSize
+	_, _, err := syscall.Syscall(syscall.SYS_IOCTL,
+			os.Stdout.Fd(),
+			syscall.TIOCGWINSZ,
+			uintptr(unsafe.Pointer(&w)),
+		)
+	if err != 0 {
+		io.WriteString(os.Stdout, "\x1b[999C\x1b[999B")
+		return getCursorPosition(rows, cols)
+	}
+}
+
+/*** init ***/
+
+func initEditor() {
+	if getWindowSize(&E.screenRows, &E.screenCols) == -1 {
+		die(fmt.Errorf("couldn't get screen size"))
+	}
+	E.screenRows -= 2
+}
+
 func main() {
 	enableRawMode()
+	defer disableRawMode()
+	initEditor()
 }
