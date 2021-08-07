@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go/token"
 	"io"
 	"log"
 	"os"
@@ -99,9 +100,36 @@ func enableRawMode() {
 }
 
 func disableRawMode() {
-	if e := TcSetAttr(os.Stdin.Fd(), E.origTermios); != nil {
+	if e := TcSetAttr(os.Stdin.Fd(), E.origTermios); != nil{
 		log.Fatalf("Problem disabling raw mode: %s\n", e)
 	}
+}
+
+func getCursorPosition(rows *int, cols *int) int {
+	io.WriteString(os.Stdout, "\x1b[6n")
+	var buffer [1]byte
+	var buf []byte
+	var cc int
+	for cc, _ = os.Stdin.Read(buffer[:]); cc == 1; cc, _ = os.Stdin.Read(buffer[:]) {
+		if buffer[0] == 'R' {
+			break
+		}
+		buf = append(buf, buffer[0])
+	}
+	if string(buf[0:2]) != "\x1b[" {
+		log.Printf("Failed to read rows;cols from tty\n")
+		return -1
+	}
+	if n, e := fmt.Sscanf(string(buf[2:]), "%d;%d", rows, cols); n != 2 || e != nil {
+		if e != nil {
+			log.Printf("getCursorPosition: fmt.Sscanf() failed: %s\n", e)
+		}
+		if n != 2 {
+			log.Printf("getCursorPosition: got %d items, wanted 2\n", n)
+		}
+		return -1
+	}
+	return 0
 }
 
 func getWindowSize(rows *int, cols *int) int {
@@ -114,7 +142,12 @@ func getWindowSize(rows *int, cols *int) int {
 	if err != 0 {
 		io.WriteString(os.Stdout, "\x1b[999C\x1b[999B")
 		return getCursorPosition(rows, cols)
+	} else {
+		*rows = int(w.Row)
+		*cols = int(w.Col)
+		return 0
 	}
+	return -1
 }
 
 /*** init ***/
