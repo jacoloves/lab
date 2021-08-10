@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 	"syscall"
 	"time"
 	"unsafe"
@@ -150,6 +151,24 @@ func getWindowSize(rows *int, cols *int) int {
 	return -1
 }
 
+func editorSelectSyntaxHighlight() {
+	if E.filename == "" { return }
+
+	for _, s := range HLDB {
+		for _, suffix := range s.filematch {
+			if strings.HasSuffix(E.filename, suffix) {
+				E.syntax = &s
+				return
+			}
+		}
+	}
+}
+
+func editorOpen(filename string) {
+	E.filename = filename
+	editorSelectSyntaxHighlight()
+}
+
 /*** init ***/
 
 func initEditor() {
@@ -163,4 +182,7 @@ func main() {
 	enableRawMode()
 	defer disableRawMode()
 	initEditor()
+	if len(os.Args) > 1 {
+		editorOpen(os.Args[1])
+	}
 }
