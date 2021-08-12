@@ -1,6 +1,7 @@
 package main
 
-import (
+import 	(
+	"bufio"
 	"fmt"
 	"go/token"
 	"io"
@@ -11,6 +12,15 @@ import (
 	"time"
 	"unsafe"
 )
+
+/*** defines ***/
+
+const (
+	HL_HIGHLIGHT_NUMBERS = 1 << 0
+	HL_HIGHLIGHT_STRINGS = 1 << iota
+)
+
+/*** data ***/
 
 type Termios struct {
 	Iflag  uint32
@@ -69,7 +79,33 @@ type WinSize struct {
 
 var E editorConfig
 
+/*** filetypes ***/
+var HLDB []editorSyntax = []editorSyntax {
+	editorSyntax{
+		filetype: "c",
+		filematch: []string{".c", ".h", ".cpp"},
+		keywords: []string{"switch", "if", "while", "for",
+				"break", "continue", "return", "else", "struct",
+				"union", "typedef", "static", "enum", "class", "case",
+				"int|", "long|", "double|", "float|", "char|",
+				"unsigned|", "signed|", "void|",
+			},
+		singleLineCommentStart: []byte{'/', '/'},
+		multiLineCommentStart: []byte{'/', '*'},
+		multiLineCommentEnd: []byte{'*', '/'},
+		flags:HL_HIGHLIGHT_NUMBERS|HL_HIGHLIGHT_STRINGS,
+	},
+}
+
 /*** terminal ***/
+
+func die(err error) {
+	disableRawMode()
+	io.WriteString(os.Stdout, "\x1b[2J")
+	io.WriteString(os.Stdout, "\x1b[H")
+	log.Fatal(err)
+}
+
 func TcSetAttr(fd uintptr, termios *Termios) error {
 	if _, _, err := syscall.Syscall(syscall.SYS_IOCTL, fd, uintptr(syscall.TCSETS+1), uintptr(unsafe.Pointer(termios))); err != 0 {
 		return err
@@ -101,7 +137,7 @@ func enableRawMode() {
 }
 
 func disableRawMode() {
-	if e := TcSetAttr(os.Stdin.Fd(), E.origTermios); != nil{
+	if e := TcSetAttr(os.Stdin.Fd(), E.origTermios); e != nil{
 		log.Fatalf("Problem disabling raw mode: %s\n", e)
 	}
 }
@@ -151,6 +187,8 @@ func getWindowSize(rows *int, cols *int) int {
 	return -1
 }
 
+/*** syntax hightlighting ***/
+
 func editorSelectSyntaxHighlight() {
 	if E.filename == "" { return }
 
@@ -164,9 +202,29 @@ func editorSelectSyntaxHighlight() {
 	}
 }
 
+/*** row operations ***/
+
+/*** file I/O ***/
+
 func editorOpen(filename string) {
 	E.filename = filename
 	editorSelectSyntaxHighlight()
+	fd, err := os.Open(filename)
+	if err != nil {
+		die(err)
+	}
+	defer fd.Close()
+	fp := bufio.NewReader(fd)
+
+	for line, err := fp.ReadBytes('\n'); err == nil; err = fp.ReadBytes('\n') {
+		for c := line[len(line) -1]; len(line) > 0 && (c == '\n' || c == '\r'); {
+			line = line[:len(line)-1]
+			if len(line) > 0 {
+				c = line[len(line) - 1]
+			}
+		}
+		editorInserRow(E.numRows, line)
+	}
 }
 
 /*** init ***/
