@@ -204,6 +204,37 @@ func editorSelectSyntaxHighlight() {
 
 /*** row operations ***/
 
+func editorInserRow(at int, s []byte) {
+	if at < 0 || at > E.numRows {
+		return
+	}
+	var r erow
+	r.chars = s
+	r.size = len(s)
+	r.idx = at
+
+	if at == 0 {
+		t := make([]erow, 1)
+		t[0] = r
+		E.rows = append(t, E.rows...)
+	} else if at == E.numRows {
+		E.rows = append(E.rows, r)
+	} else {
+		t := make([]erow, 1)
+		t[0] = r
+		E.rows = append(E.rows[:at], append(t, E.rows[at:]...)...)
+	}
+
+	for j := at + 1; j <= E.numRows; j++ {
+		E.rows[j].idx++
+	}
+
+	editorUpdateRow(&E.rows[at])
+	E.numRows++
+	E.dirty = true
+
+}
+
 /*** file I/O ***/
 
 func editorOpen(filename string) {
@@ -225,6 +256,11 @@ func editorOpen(filename string) {
 		}
 		editorInserRow(E.numRows, line)
 	}
+
+	if err != nil && err != io.EOF {
+		die(err)
+	}
+	E.dirty = false
 }
 
 /*** init ***/
