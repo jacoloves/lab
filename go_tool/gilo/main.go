@@ -15,6 +15,10 @@ import 	(
 
 /*** defines ***/
 
+const GILO_VERSION = "0.0.1"
+const GILO_TAB_STOP = 8
+const GILO_QUIT_TIMES = 3
+
 const (
 	HL_HIGHLIGHT_NUMBERS = 1 << 0
 	HL_HIGHLIGHT_STRINGS = 1 << iota
@@ -204,7 +208,35 @@ func editorSelectSyntaxHighlight() {
 
 /*** row operations ***/
 
-func editorInserRow(at int, s []byte) {
+func editorUpdateRow(row *erow) {
+	tabs := 0
+	for _, c := range row.chars {
+		if c == 't' {
+			tabs++
+		}
+	}
+
+	row.render = make([]byte, row.size + tabs*(GILO_TAB_STOP - 1))
+
+	idx := 0
+	for _, c := range row.chars {
+		if c == '\t' {
+			row.render[idx] = ' '
+			idx++
+			for (idx%GILO_TAB_STOP) != 0 {
+				row.render[idx] = ' '
+				idx++
+			}
+		} else {
+			row.render[idx] = c
+			idx++
+		}
+	}
+	row.rsize = idx
+	editorUpdateSyntax(row)
+}
+
+func editorInsertRow(at int, s []byte) {
 	if at < 0 || at > E.numRows {
 		return
 	}
@@ -254,7 +286,7 @@ func editorOpen(filename string) {
 				c = line[len(line) - 1]
 			}
 		}
-		editorInserRow(E.numRows, line)
+		editorInsertRow(E.numRows, line)
 	}
 
 	if err != nil && err != io.EOF {
