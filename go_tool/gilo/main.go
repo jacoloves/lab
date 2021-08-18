@@ -2,6 +2,7 @@ package main
 
 import 	(
 	"bufio"
+	"bytes"
 	"fmt"
 	"go/token"
 	"io"
@@ -22,6 +23,28 @@ const GILO_QUIT_TIMES = 3
 const (
 	HL_HIGHLIGHT_NUMBERS = 1 << 0
 	HL_HIGHLIGHT_STRINGS = 1 << iota
+)
+
+const (
+	BACKSPACE   = 127
+	ARROW_LEFT  = 1000 + iota
+	ARROW_RIGHT = 1000 + iota
+	DEL_KEY     = 1000 + iota
+	HOME_KEY    = 1000 + iota
+	END_KEY     = 1000 + iota
+	PAGE_UP     = 1000 + iota
+	PAGE_DOWN   = 1000 + iota
+)
+
+const (
+	HL_NORMAL    = 0
+	HL_COMMENT   = iota 
+	HL_MLCOMMENT = iota 
+	HL_KEYWORD1  = iota 
+	HL_KEYWORD2  = iota 
+	HL_STRING	   = iota 
+	HL_NUMBER    = iota 
+	HL_MATCH     = iota 
 )
 
 /*** data ***/
@@ -193,6 +216,110 @@ func getWindowSize(rows *int, cols *int) int {
 
 /*** syntax hightlighting ***/
 
+func editorUpdateSyntax(row *erow) {
+	row.hl = make([]byte, row.rsize)
+	if E.syntax == nil { return }
+	keywords := E.syntax.keywords[:]
+	scs := E.syntax.singleLineCommentStart
+	mcs := E.syntax.multiLineCommentStart
+	mce := E.syntax.multiLineCommentEnd
+	prevSep := true
+	inComment := row.idx > 0 && E.rows[row.idx-1].hlOpenComment
+	var inString byte = 0
+	var skip = 0
+	for i, c := range row.render {
+		if skip > 0 {
+			skip--
+			continue
+		}
+		if inString == 0 && len(scs) > 0 && !inComment {
+			if bytes.HasPrefix(row.render[i:], scs) {
+				for j := i; j < row.rsize; j++ {
+					row.hl[j] = HL_COMMENT
+				}
+				break
+			}
+		}
+		if inString == 0 && len(scs) > 0 !inComment {
+			if bytes.HasPrefix(row.render[i:], scs) {
+				for l := i; l < i + len(mce); i++ {
+					row.hl[l] = HL_MLCOMMENT
+				}
+				skip = len(mce)
+				inComment = false
+				prevSep = true
+			}
+			continue
+		} else if bytes.HasPrefix(row.render[i:], mcs) {
+			for l := i; l < i + len(mcs); i++ {
+				roe.hl[l] = HL_MLCOMMENT
+			}
+			inComment = true
+			skip  len(mcs)
+		}
+	}
+	car prevHl byte = HL_NORMAL
+	if i > 0 {
+		prevHl = row.hl[i-1]
+	}
+	if (E.syntax.flags & HL_HIGHLIGHT_STRINGS) == HL_HIGHLIGHT_STRINGS {
+		if inString != 0 {
+			row.hl[i] = HL_STRING
+			if c == '\\' && i + 1 < row.rsize {
+				row.hl[i+1] = HL_STRING
+				skip = 1
+				continue
+			}
+			if c == inString { inString = 0 }
+			prevSep = true
+			continue
+		} else {
+			if c == '"' || c == '\'' {
+				inString = c
+				row.hl[i] = HL_STRING
+				continue
+			}
+		}
+	}
+	if (E.syntax.flags & HL_HIGHLIGHT_NUMBERS) == HL_HIGHLIGHT_NUMBERS {
+		if unicode.IsDigit(rune(c)) &&
+				(prevSep || prevHl == HL_NUMBER) ||
+				(c == '.' && prevHl == HL_NUMBER) {
+					row.hl[i] = HL_NUMBER
+					prevSep = false
+					continue
+				}
+	}
+	if prevSep {
+		var j int
+		var skw string
+		for j, skw = range keywords {
+			kw := []byte(skw)
+			var color byte = HL_KEYWORD1
+			idx := bytes.LastIndexByte(kw, '|')
+			if idx > 0 {
+				kw = kw[:idx]
+				color = HL_KEYWORD2
+			}
+			klen := len(kw)
+			if bytes.HasPrefix(row.render[i:], kw) &&
+							(len(row.render[i:]) == klen ||
+							isSeparator(row.render[i+klen]))	{
+								for l := i; l < i+klen; l++ {
+									row.hl[i] = color
+								}
+								skip = klen - 1
+								break
+							}
+		}
+		if j < len(keywords) - 1 {
+			prevSep = false
+			continue
+		}
+	}
+	prevSep = isSeparator(c)
+}
+
 func editorSelectSyntaxHighlight() {
 	if E.filename == "" { return }
 
@@ -211,7 +338,7 @@ func editorSelectSyntaxHighlight() {
 func editorUpdateRow(row *erow) {
 	tabs := 0
 	for _, c := range row.chars {
-		if c == 't' {
+		if c == '\t' {
 			tabs++
 		}
 	}
