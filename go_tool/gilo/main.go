@@ -240,16 +240,18 @@ func editorUpdateSyntax(row *erow) {
 				break
 			}
 		}
-		if inString == 0 && len(scs) > 0 !inComment {
-			if bytes.HasPrefix(row.render[i:], scs) {
-				for l := i; l < i + len(mce); i++ {
-					row.hl[l] = HL_MLCOMMENT
+		if inString == 0 && len(mcs) > 0 && len(mce) > 0 {
+			if inComment {
+				row.hl[i] = HL_COMMENT
+				if bytes.HasPrefix(row.render[i:], mce) {
+					for l := i; l < i + len(mce); i++ {
+						row.hl[l] = HL_MLCOMMENT
+					}
+					skip = len(mce)
+					inComment = false
+					prevSep = true
 				}
-				skip = len(mce)
-				inComment = false
-				prevSep = true
-			}
-			continue
+				continue
 		} else if bytes.HasPrefix(row.render[i:], mcs) {
 			for l := i; l < i + len(mcs); i++ {
 				roe.hl[l] = HL_MLCOMMENT
