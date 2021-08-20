@@ -257,7 +257,7 @@ func editorUpdateSyntax(row *erow) {
 				roe.hl[l] = HL_MLCOMMENT
 			}
 			inComment = true
-			skip  len(mcs)
+			skip = len(mcs)
 		}
 	}
 	car prevHl byte = HL_NORMAL
