@@ -260,7 +260,7 @@ func editorUpdateSyntax(row *erow) {
 			skip = len(mcs)
 		}
 	}
-	car prevHl byte = HL_NORMAL
+	var prevHl byte = HL_NORMAL
 	if i > 0 {
 		prevHl = row.hl[i-1]
 	}
