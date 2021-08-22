@@ -29,6 +29,8 @@ const (
 	BACKSPACE   = 127
 	ARROW_LEFT  = 1000 + iota
 	ARROW_RIGHT = 1000 + iota
+	ARROW_UP    = 1000 + iota
+	ARROW_DOWN  = 1000 + iota
 	DEL_KEY     = 1000 + iota
 	HOME_KEY    = 1000 + iota
 	END_KEY     = 1000 + iota
@@ -336,6 +338,24 @@ func editorUpdateSyntax(row *erow) {
 	}
 }
 
+func editorSyntaxToColor(hl byte) int {
+	switch hl {
+		case HL_COMMENT, HL_MLCOMMENT:
+			return 36
+		case HL_KEYWORD1:
+			return 32
+		case HL_KEYWORD2:
+			return 33
+		case HL_STRING:
+			return 35
+		case HL_NUMBER:
+			return 31
+		case HL_MATCH:
+			return 34
+	}
+	return 37
+}
+
 func editorSelectSyntaxHighlight() {
 	if E.filename == "" { return }
 
@@ -438,6 +458,64 @@ func editorOpen(filename string) {
 	E.dirty = false
 }
 
+/*** input ***/
+
+var quitTimes int = GILO_QUIT_TIMES
+
+func editorProcessKeypress() {
+	c := editorReadKey()
+	switch c {
+		case '\r':
+			editorInserNewLine()
+			break
+		case ('q' & 0x1f):
+			if E.dirty && quitTimes > 0 {
+				editorSetStatusMessage("Warnig!! File has unsaved chages. Press Ctrk-Q %d more times to quit.", quitTimes)
+				quitTimes--
+				return
+			}
+			io.WriteString(os.Stdout, "\x1b[2J")
+			io.WriteString(os.Stdout, "\x1b[H")
+			disableRawMode()
+			os.Exit(0)
+		case ('s' & 0x1f):
+			editorSave()
+		case HOME_KEY:
+			E.cx = 0
+		case END_KEY:
+			if E.cy < E.numRows {
+				E.cx = E.rows[E.cy].size
+			}
+		case ('f' & 0x1f):
+			editorFind()
+		case ('h' & 0x1f), BACKSPACE, DEL_KEY:
+			if c == DEL_KEY { editorMoveCursor(ARROW_RIGHT) }
+			editorDelChar()
+			break
+		case PAGE_UP, PAGE_DOWN:
+			dir := ARROW_DOWN
+			if c == PAGE_UP {
+				E.cy = E.rowoff
+				dir = ARROW_UP
+			} else {
+				E.cy = E.rowoff + E.screenRows - 1
+				if E.cy > E.numRows { E.cy = E.numRows }
+			}
+			for times := E.screenRows; times > 0; times-- {
+				editorMoveCursor(dir)
+			}
+		case ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT:
+			editorMoveCursor(c)
+		case ('l' & 0x1f):
+			break
+		case '\x1b':
+			break
+		default:
+			editorInserChar(byte(c))
+		}
+	quitTimes = GILO_QUIT_TIMES
+}
+
 /*** output ***/
 
 func editorScroll() {
@@ -476,6 +554,108 @@ func editorRefreshScreen() {
 	}
 }
 
+editorDrawRows(ab *bytes.Buffer) {
+	for y := 0; y < E.screenRows; y++ {
+		filerow := y + E.rowoff
+		if filerow >= E.numRows {
+			if E.numRows == 0 && y == E.screenRows/3 {
+				w := fmt.Sprintf("gilo editor -- version %s", GILO_VERSION)
+				if len(w) > E.screenCols {
+					w = w[0:E.screenCols]
+				}
+				pad := "~ "
+				for padding := (E.screenCols - len(w)) / 2; padding > 0; padding-- {
+					ab.WriteString(pad)
+					pad = " "
+				}
+				ab.WriteString(w)
+			} else {
+				ab.WriteString("~")
+			}
+		} else {
+			len := E.rows[filerow].rsize - E.coloff
+			if len < 0 { len = 0 }
+			if len > 0 {
+				if len > E.screenCols { len = E.screenCols }
+				rindex := E.coloff+len
+				hl := E.rows[filerow].hl[E.coloff:index]
+				currentColor := -1
+				for j, c := range E.rows[filerow].render[E.coloff:index] {
+					if unicode.IsControl(rune(c)) {
+						ab.WriteString("\x1b[7m")
+						if c < 26 {
+							ab.WriteString("@")
+						} else {
+							ab.WriteString("?")
+						}
+						ab.WriteString("\x1b[m")
+						if currentColor != -1 {
+							ab.WriteString(fmt.Sprintf("\x1b[%dm", currentColor))
+						}
+					} else if hl[j] == HL_NORMAL {
+						if currentColor != -1 {
+							ab.WriteString("\x1b[39m")
+							currentColor = -1
+						}
+						ab.WriteByte(c)
+					} else {
+						color := editorSyntaxToColor(hl[j])
+						if color != currentColor {
+							currentColor = color
+							buf := fmt.Sprintf("\x1b[%dm", color)
+							ab.WriteString(buf)
+						}
+						ab.WriteByte(c)
+					}
+				}
+				ab.WriteString("\x1b[39m")
+			}
+		}
+		ab.WriteString("\xab[k")
+		ab.WriteString("\r\n")
+	}
+}
+
+func editorDrawStatusBar(ab *bytes.Buffer) {
+	ab.WriteString("\xab[7m")
+	fname := E.filename
+	if fname == "" {
+		fname = "[No Name]"
+	}
+	modified := ""
+	if E.dirty { modified = "(modified)"}
+	status := fmt.Sprintf("%.20s - %d lines %s", fname, E.numRows, modified)
+	ln := len(status)
+	if ln > E.screenCols { ln = E.screenCols }
+	filetype := "no ft"
+	if E.syntax != nil {
+		filetype = E.syntax.filetype
+	}
+	rstatus := fmt.Sprintf("%s | %d/%d", filetype, E.cy+1, E.numRows)
+	rlen := len(rstatus)
+	ab.WriteString(status[:ln])
+	for ln < E.screenCols {
+		if E.screenCols - ln == rlen {
+			ab.WriteString(rstatus)
+			break
+		} else {
+			ab.WriteString(" ")
+			ln++
+		} 
+	}
+	ab.WriteString("\x1b[m")
+	ab.WriteString("\r\n")
+}
+
+func editorDrawMessageBar(ab *bytes.Buffer) {
+	ab.WriteString("\x1b[K")
+	msglen := len(E.statusmsg)
+	if msglen > E.screenCols { msglen = E.screenCols }
+	if msglen > 0 && (time.Now().Sub(E.statusmsg_time) < 5*time.Second) {
+		ab.WriteString(E.statusmsg)
+	}
+}
+
 func editorSetStatusMessage(args...interface{}) {
 	E.statusmsg = fmt.Sprintf((args[0].(string), args[1:]...))
 	E.statusmsg_time = time.Now()
@@ -502,5 +682,6 @@ func main() {
 
 	for {
 		editorRefreshScreen()
+		editorProcessKeypress()
 	}
 }
