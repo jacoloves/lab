@@ -215,6 +215,13 @@ func getWindowSize(rows *int, cols *int) int {
 }
 
 /*** syntax hightlighting ***/
+var separators []byte = []byte(",.()+-/*=~%<>[]; \t\n\r")
+func isSeparator(c byte) bool {
+	if bytes.IndexByte(separators, c) >= 0 {
+		return true
+	}
+	return false
+}
 
 func editorUpdateSyntax(row *erow) {
 	row.hl = make([]byte, row.rsize)
@@ -260,66 +267,73 @@ func editorUpdateSyntax(row *erow) {
 			skip = len(mcs)
 		}
 	}
-	var prevHl byte = HL_NORMAL
-	if i > 0 {
-		prevHl = row.hl[i-1]
-	}
-	if (E.syntax.flags & HL_HIGHLIGHT_STRINGS) == HL_HIGHLIGHT_STRINGS {
-		if inString != 0 {
-			row.hl[i] = HL_STRING
-			if c == '\\' && i + 1 < row.rsize {
-				row.hl[i+1] = HL_STRING
-				skip = 1
-				continue
-			}
-			if c == inString { inString = 0 }
-			prevSep = true
-			continue
-		} else {
-			if c == '"' || c == '\'' {
-				inString = c
-				row.hl[i] = HL_STRING
-				continue
-			}
+		var prevHl byte = HL_NORMAL
+		if i > 0 {
+			prevHl = row.hl[i-1]
 		}
-	}
-	if (E.syntax.flags & HL_HIGHLIGHT_NUMBERS) == HL_HIGHLIGHT_NUMBERS {
-		if unicode.IsDigit(rune(c)) &&
-				(prevSep || prevHl == HL_NUMBER) ||
-				(c == '.' && prevHl == HL_NUMBER) {
-					row.hl[i] = HL_NUMBER
-					prevSep = false
+		if (E.syntax.flags & HL_HIGHLIGHT_STRINGS) == HL_HIGHLIGHT_STRINGS {
+			if inString != 0 {
+				row.hl[i] = HL_STRING
+				if c == '\\' && i + 1 < row.rsize {
+					row.hl[i+1] = HL_STRING
+					skip = 1
 					continue
 				}
-	}
-	if prevSep {
-		var j int
-		var skw string
-		for j, skw = range keywords {
-			kw := []byte(skw)
-			var color byte = HL_KEYWORD1
-			idx := bytes.LastIndexByte(kw, '|')
-			if idx > 0 {
-				kw = kw[:idx]
-				color = HL_KEYWORD2
+				if c == inString { inString = 0 }
+				prevSep = true
+				continue
+			} else {
+				if c == '"' || c == '\'' {
+					inString = c
+					row.hl[i] = HL_STRING
+					continue
+				}
 			}
-			klen := len(kw)
-			if bytes.HasPrefix(row.render[i:], kw) &&
-							(len(row.render[i:]) == klen ||
-							isSeparator(row.render[i+klen]))	{
-								for l := i; l < i+klen; l++ {
-									row.hl[i] = color
+		}
+		if (E.syntax.flags & HL_HIGHLIGHT_NUMBERS) == HL_HIGHLIGHT_NUMBERS {
+			if unicode.IsDigit(rune(c)) &&
+					(prevSep || prevHl == HL_NUMBER) ||
+					(c == '.' && prevHl == HL_NUMBER) {
+						row.hl[i] = HL_NUMBER
+						prevSep = false
+						continue
+					}
+		}
+		if prevSep {
+			var j int
+			var skw string
+			for j, skw = range keywords {
+				kw := []byte(skw)
+				var color byte = HL_KEYWORD1
+				idx := bytes.LastIndexByte(kw, '|')
+				if idx > 0 {
+					kw = kw[:idx]
+					color = HL_KEYWORD2
+				}
+				klen := len(kw)
+				if bytes.HasPrefix(row.render[i:], kw) &&
+								(len(row.render[i:]) == klen ||
+								isSeparator(row.render[i+klen]))	{
+									for l := i; l < i+klen; l++ {
+										row.hl[i] = color
+									}
+									skip = klen - 1
+									break
 								}
-								skip = klen - 1
-								break
-							}
+			}
+			if j < len(keywords) - 1 {
+				prevSep = false
+				continue
+			}
 		}
-		if j < len(keywords) - 1 {
-			prevSep = false
-			continue
-		}
+		prevSep = isSeparator(c)
 	}
-	prevSep = isSeparator(c)
+
+	changed := row.hlOpenComment != inComment
+	row.hlOpenComment = inComment
+	if changed && row.idx + 1 < E.numRows {
+		editorUpdateSyntax(&E.rows[row.idx + 1])
+	}
 }
 
 func editorSelectSyntaxHighlight() {
@@ -424,6 +438,49 @@ func editorOpen(filename string) {
 	E.dirty = false
 }
 
+/*** output ***/
+
+func editorScroll() {
+	E.rx = 0
+
+	if (E.cy < E.numRows) {
+		E.rx = editorRowCxToRx(%(E.rows[E.cy]), E.cx)
+	}
+
+	if E.cy < E.rowoff {
+		E.rowoff = E.cy
+	}
+	if E.cy >= E.rowoff + E.screenRows {
+		E.rowoff = E.cy - E.screenRows + 1
+	}
+	if E.rx < E.coloff {
+		E.coloff = E.rx
+	}
+	if E.rx >= E.coloff + E.screenCols {
+		E.coloff = E.rx - E.screenCols + 1
+	}
+}
+
+func editorRefreshScreen() {
+	editorScroll()
+	ab := bytes.NewBufferString("\x1b[251")
+	ab.WriteString("\x1b[H")
+	editorDrawRows(ab)
+	editorDrawStatusBar(ab)
+	editorDrawMessageBar(ab)
+	ab.WriteString(fmt.Sprintf("\x1b[%d;%dH", (E.cy - E.rowoff) + 1, (E.rx - E.coloff) + 1))
+	ab.WriteString("\x1b[?25h")
+	_, e := ab.WriteTo(os.Stdout)
+	if e != nil {
+		log.Fatal(e)
+	}
+}
+
+func editorSetStatusMessage(args...interface{}) {
+	E.statusmsg = fmt.Sprintf((args[0].(string), args[1:]...))
+	E.statusmsg_time = time.Now()
+}
+
 /*** init ***/
 
 func initEditor() {
@@ -439,5 +496,11 @@ func main() {
 	initEditor()
 	if len(os.Args) > 1 {
 		editorOpen(os.Args[1])
+	}
+
+	editorSetStausMessage("HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-F = find")
+
+	for {
+		editorRefreshScreen()
 	}
 }
