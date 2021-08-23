@@ -51,7 +51,6 @@ func main() {
 	}
 	defer file.Close()
 
-	// var i int
 	var buffer string
 
 	clear()
@@ -69,12 +68,5 @@ func main() {
 			buffer += fmt.Sprintln(scanner.Text())
 		}
 
-		// i++
 	}
-
-	// for i := 75; i > 0; i-- {
-	// 	fmt.Fprintf(out, "\x1b[10;%dH\x1bK", i)
-	// 	fmt.Print(`ʕ◔ϖ◔ʔ `)
-	// 	time.Sleep(50 * time.Millisecond)
-	// }
 }
