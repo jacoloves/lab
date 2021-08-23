@@ -19,7 +19,7 @@ var (
 
 func clear() {
 	fmt.Fprintln(out, "\x1b[2J")
-	fmt.Fprintln(out, "\x1b[1;1H")
+	fmt.Fprintln(out, "\x1b[H")
 }
 
 func color() {
