@@ -171,6 +171,73 @@ func disableRawMode() {
 	}
 }
 
+func editorReadKey() int{
+	var buffer [1]byte
+	var cc int
+	var err error
+	for cc, err = os.Stdin.Read(buffer[:]); cc != 1; cc, err = os.Stdin.Read(buffer[:]) {
+	}
+	if err != nil {
+		die(err)
+	}
+	if buffer[0] == '\x1b' {
+		var seq [2]byte
+		if cc, _= os.Stdin.Read(seq[:]); cc != 2 {
+			return '\x1b'
+		}
+
+		if seq[0] == '[' {
+			if seq[1] >= '0' && seq[1] <= '9' {
+				if cc, err = os.Stdin.Read(buffer[:]); cc != 1 {
+					return '\x1b'
+				}
+				if buffer[0] == '~' {
+					switch seq[1] {
+						case '1':
+							return HOME_KEY
+						case '3':
+							return DEL_KEY
+						case '4':
+							return END_KEY 
+						case '5':
+							return PAGE_UP 
+						case '6':
+							return PAGE_DOWN 
+						case '7':
+							return HOME_KEY 
+						case '8':
+							return END_KEY 
+					}
+				}
+			} else {
+				switch seq[1] {
+						case 'A':
+							return ARROW_UP
+						case 'B':
+							return ARROW_DOWN 
+						case 'C':
+							return ARROW_RIGHT 
+						case 'D':
+							return ARROW_LEFT 
+						case 'H':
+							return HOME_KEY 
+						case 'F':
+							return END_KEY 
+					}
+				}
+			} else if seq[0] == '0' {
+				switch seq[1] {
+				case 'H':
+					return HOME_KEY
+				case 'F':
+					return END_KEY
+				}
+		}
+		return '\x1b'
+	}
+	return int(buffer[0])
+}
+
 func getCursorPosition(rows *int, cols *int) int {
 	io.WriteString(os.Stdout, "\x1b[6n")
 	var buffer [1]byte
@@ -466,7 +533,7 @@ func editorProcessKeypress() {
 	c := editorReadKey()
 	switch c {
 		case '\r':
-			editorInserNewLine()
+			editorInsertNewLine()
 			break
 		case ('q' & 0x1f):
 			if E.dirty && quitTimes > 0 {
