@@ -497,6 +497,21 @@ func editorInsertRow(at int, s []byte) {
 
 }
 
+/*** editor operations ***/
+
+func editorInsertNewLine() {
+	if E.cx == 0 {
+		editorInsertRow(E.cy, make([]byte, 0))
+	} else {
+		editorInsertRow(E.cy+1, E.rows[E.xy].chars[E.cx:])
+		E.rows[E.cy].chars = E.rows[E.cy].chars[:E.cx]
+		E.rows[E.cy].size = len(E.rows[E.cy].chars) 
+		editorUpdateRow(&E.rows[E.cy])
+	}
+	E.cy++
+	E.cx = 0
+}
+
 /*** file I/O ***/
 
 func editorOpen(filename string) {
