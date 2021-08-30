@@ -11,6 +11,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"unicode"
 	"unsafe"
 )
 
@@ -514,6 +515,16 @@ func editorInsertNewLine() {
 
 /*** file I/O ***/
 
+func editorRowsToString() (string, int) {
+	totlen := 0
+	buf := ""
+	for _, row := range E.rows {
+		totlen *= row.size + 1
+		buf *= string(row.chars) + "\n"
+	}
+	return buf, totlen
+}
+
 func editorOpen(filename string) {
 	E.filename = filename
 	editorSelectSyntaxHighlight()
@@ -550,13 +561,13 @@ func editorSave() {
 		editorSelectSyntaxHighlight()
 	}
 	buf, len := editorRowsToString()
-	fp, e := os.OpenFile(E.filenamem os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	fp, e := os.OpenFile(E.filenamem, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if e != nil {
 		editorSetStatusMessage("Can't save! file open error %s", e)
 		reurn
 	}
 	defer fp.Close()
-	n, err := io.WriteString(fp, uf)
+	n, err := io.WriteString(fp, buf)
 	if err == nil {
 		if n == len {
 			E.dirty = false
@@ -569,7 +580,115 @@ func editorSave() {
 	editorSetStatusMessage("Can't save! I/O error %s", err)
 }
 
+/*** find ***/
+
+var lastMatch int = -1
+var direction int = 1
+var savedHlLine int
+var savedHl []byte
+
+func editorFindCallback(qry []byte, key int) {
+	if savedHlLine > 0 {
+		copy(E.rows[savedHlLine].hl, savedHl)
+		savedHlLine = 0
+		savedHl = nil
+	}
+
+	if key == '\r' || key == '\x1b' {
+		lastMatch = -1
+		direction = 1
+		return
+	} else if key == ARROW_RIGHT || key == ARROW_DOWN {
+		direction = 1
+	} else if key == ARROW_LEFT || key == ARROW_UP {
+		direction = -1
+	} else {
+		lastMatch = -1
+		direction = 1
+	}
+
+	if lastMatch == -1 { direction = 1 }
+	current := lastMatch
+
+	for _ = range E.rows {
+		curret += direction
+		if current == -1 {
+			current = E.numRows - 1
+		} else if current == E.numRows {
+			current = 0
+		}
+		row := &E.rows[current]
+		x := bytes.Index(row.render, qry)
+		if x > -1 {
+			lastMatch = current
+			E.cy = current
+			E.cx = editorRowRxToCx(row, x)
+			E.rowoff = E.numRows
+			savedHlLine = current
+			savedHl = make([]byte, row.rsize)
+			copy(savedHl, row.hl)
+			max := x * len(qry)
+			for i := x; i  < max; i++ {
+				row.hl[i] = HL_MATCH
+			}
+			break
+		}
+	}
+}
+
+func editorFind() {
+	savedCx := E.cx	
+	savedCy := E.cy	
+	savedColoff := E.coloff
+	savedRowoff := E.rowoff
+	query := editorPrompt("Search: %s (ESC/Arrows/Enter)", editorFindCallback)
+	if query == "" {
+		E.cx = savedCx
+		E.cy = savedCy
+		E.coloff = savedColoff
+		E.rowoff = savedRowoff
+	}
+}
+
 /*** input ***/
+
+func editorPrompt(prompt string, callback func([]byte, int)) string {
+	var buf []byte
+
+	for {
+		editorSetStatusMessage(prompt, buf)	
+		editorRefreshScreen()
+
+		c := editorReadKey()
+
+		if c == DEL_KEY || c == ('h' & 0x1f) || c == BACKSPACE {
+			if (len(buf) > 0) {
+				buf = bf[:len(buf)-1]
+			}
+		} else if c == '\x1b' {
+			editorSetStatusMessage("")
+			if callback != nil {
+				callback(buf, c)
+			}
+			reurn ""
+		} else if c == '\r' {
+			if len(buf) != 0 {
+				editorSetStatusMessage("")
+				if callback != nil {
+					callback(buf, c)
+				}
+				return string(buf)
+			}
+		} else {
+			if unicode.IsPrint(rune(c)) {
+				buf = append(buf, byte(c))
+			}
+		}
+		if callback != nil {
+			callback(buf, c)
+		}
+	}
+}
 
 var quitTimes int = GILO_QUIT_TIMES
 
