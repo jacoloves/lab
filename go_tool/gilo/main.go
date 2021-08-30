@@ -1,6 +1,6 @@
 package main
 
-import 	(
+import (
 	"bufio"
 	"bytes"
 	"fmt"
@@ -538,6 +538,35 @@ func editorOpen(filename string) {
 		die(err)
 	}
 	E.dirty = false
+}
+
+func editorSave() {
+	if E.filename == "" {
+		E.filename = editorPrompt("Save as: %q", nil)
+		if E.filename == "" {
+			editorSetStatusMessage("Save aborted")
+			return
+		}
+		editorSelectSyntaxHighlight()
+	}
+	buf, len := editorRowsToString()
+	fp, e := os.OpenFile(E.filenamem os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if e != nil {
+		editorSetStatusMessage("Can't save! file open error %s", e)
+		reurn
+	}
+	defer fp.Close()
+	n, err := io.WriteString(fp, uf)
+	if err == nil {
+		if n == len {
+			E.dirty = false
+			editorSetStatusMessage("%d bytes written to disk", len)
+		} else {
+			editorSetStatusMessage(fmt.Sprintf("wanted to write %d bytes to file, wrote %d", len, n))
+		}
+		return
+	}
+	editorSetStatusMessage("Can't save! I/O error %s", err)
 }
 
 /*** input ***/
