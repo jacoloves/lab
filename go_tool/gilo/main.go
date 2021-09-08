@@ -498,6 +498,21 @@ func editorInsertRow(at int, s []byte) {
 
 }
 
+func editorRowAppendString(row *erow s []byte) {
+	row.chars = append(row.chars, s...)
+	row.size = len(row.chars)
+	editorUpdateRow(row)
+	E.dirty = true
+}
+
+func editorRowDelChar(row *erow, at int) {
+	if at < 0 || at > row.size { return }
+	row.chars = append(row.chars[:at], row.chars[at+1:]...)
+	row.size--
+	E.dirty = true
+	editorUpdateRow(row)
+}
+
 /*** editor operations ***/
 
 func editorInsertNewLine() {
@@ -511,6 +526,20 @@ func editorInsertNewLine() {
 	}
 	E.cy++
 	E.cx = 0
+}
+
+func editorDelChar() {
+	if E.cy == E.numRows { return }	
+	if E.cx == 0 && E.cy == 0 { return }
+	if E.cx > 0 {
+		editorRowDelChar(&E.rows[E.cy], E.cx - 1)
+		E.cx--
+	} else {
+		E.cx = E.rows[E.cy - 1].size
+		editorRowAppendString(&E.row[E.cy - 1], E.rows[E.cy].chars)
+		editorDelRow(E.cy)
+		E.cy--
+	}
 }
 
 /*** file I/O ***/
@@ -687,6 +716,43 @@ func editorPrompt(prompt string, callback func([]byte, int)) string {
 		if callback != nil {
 			callback(buf, c)
 		}
+	}
+} 
+
+func editorMoveCursor(key int) {
+	switch key {
+	case ARROW_LEFT:
+		if E.cx != 0 {
+			E.cx--
+		} else if E.cy > 0 {
+			E.cy--
+			E.cx = E.rows[E.cy].sie
+		}
+	case ARROW_RIGHT:
+		if E.cy < E.numRows {
+			if E.cx < E.rows[E.cy].size {
+				E.cx++
+			} else if E.cx == E.rows[E.cy].size {
+				E.cy++
+				E.cx = 0
+			}
+		}
+	case ARROW_UP:
+		if E.cy != 0 {
+			E.cy--
+		}
+	case ARROW_DOWN:
+		if E.cy < E.numRows {
+			E.cy++
+		}
+	}
+
+	rowlen := 0
+	if E.cy < E.numRows {
+		rowlen = E.rows[E.cy].size
+	}
+	if E.cx > rowlen {
+		E.cx = rowlen
 	}
 }
 
