@@ -495,7 +495,14 @@ func editorInsertRow(at int, s []byte) {
 	editorUpdateRow(&E.rows[at])
 	E.numRows++
 	E.dirty = true
+}
 
+func editorDelRow(at int) {
+	if at < 0 || at > E.numRows { return }
+	E.rows = append(E.rows[:at], E.rows[at+1:]...)
+	E.numRows--
+	E.dirty = true
+	for j := at; j < E.numRows; j++{ E.rows[j].idx-- }
 }
 
 func editorRowAppendString(row *erow s []byte) {
@@ -514,6 +521,15 @@ func editorRowDelChar(row *erow, at int) {
 }
 
 /*** editor operations ***/
+
+func editorInsertChar(c byte) {
+	if E.cy == 0 {
+		var emptyRow []byte
+		editorInsertRow(E.numRows, emptyRow)
+	}
+	editorRowInsertChar(&E.rows[E.cy], E.cx, c)
+	E.cx++
+}
 
 func editorInsertNewLine() {
 	if E.cx == 0 {
@@ -807,7 +823,7 @@ func editorProcessKeypress() {
 		case '\x1b':
 			break
 		default:
-			editorInserChar(byte(c))
+			editorInsertChar(byte(c))
 		}
 	quitTimes = GILO_QUIT_TIMES
 }
