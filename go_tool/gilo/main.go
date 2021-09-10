@@ -20,12 +20,6 @@ import (
 const GILO_VERSION = "0.0.1"
 const GILO_TAB_STOP = 8
 const GILO_QUIT_TIMES = 3
-
-const (
-	HL_HIGHLIGHT_NUMBERS = 1 << 0
-	HL_HIGHLIGHT_STRINGS = 1 << iota
-)
-
 const (
 	BACKSPACE   = 127
 	ARROW_LEFT  = 1000 + iota
@@ -45,22 +39,17 @@ const (
 	HL_MLCOMMENT = iota 
 	HL_KEYWORD1  = iota 
 	HL_KEYWORD2  = iota 
-	HL_STRING	   = iota 
+	HL_STRING	 = iota 
 	HL_NUMBER    = iota 
 	HL_MATCH     = iota 
 )
 
-/*** data ***/
+const (
+	HL_HIGHLIGHT_NUMBERS = 1 << 0
+	HL_HIGHLIGHT_STRINGS = 1 << iota
+)
 
-type Termios struct {
-	Iflag  uint32
-	Oflag  uint32
-	Cflag  uint32
-	Lflag  uint32
-	Cc     [20]byte
-	Ispeed uint32
-	Ospeed uint32
-}
+/*** data ***/
 
 type editorSyntax struct {
 	filetype               string
@@ -70,6 +59,16 @@ type editorSyntax struct {
 	multiLineCommentStart  []byte
 	multiLineCommentEnd    []byte
 	flags                  int
+}
+
+type Termios struct {
+	Iflag  uint32
+	Oflag  uint32
+	Cflag  uint32
+	Lflag  uint32
+	Cc     [20]byte
+	Ispeed uint32
+	Ospeed uint32
 }
 
 type erow struct {
@@ -110,6 +109,7 @@ type WinSize struct {
 var E editorConfig
 
 /*** filetypes ***/
+
 var HLDB []editorSyntax = []editorSyntax {
 	editorSyntax{
 		filetype: "c",
@@ -234,6 +234,7 @@ func editorReadKey() int{
 					return END_KEY
 				}
 		}
+
 		return '\x1b'
 	}
 	return int(buffer[0])
@@ -439,6 +440,17 @@ func editorSelectSyntaxHighlight() {
 
 /*** row operations ***/
 
+func editorRowCxToRx(row *erow, cx int) int {
+	rx := 0
+	for j := 0; j < row.size && j < cx; j++ {
+		if row.chars[j] == '\t' {
+			rx += ((GILO_TAB_STOP - 1) - (rx % GILO_TAB_STOP))
+		}
+		rx++
+	}
+	return rx
+}
+
 func editorUpdateRow(row *erow) {
 	tabs := 0
 	for _, c := range row.chars {
@@ -503,6 +515,25 @@ func editorDelRow(at int) {
 	E.numRows--
 	E.dirty = true
 	for j := at; j < E.numRows; j++{ E.rows[j].idx-- }
+}
+
+func editorRowInsertChar(row *erow, at int, c byte) {
+	if at < 0 || at > row.size {
+		row.chars = append(row.chars, c)
+	} else if at == 0 {
+		t := make([]byte, row.size+1)
+		t[0] = c
+		copy(t[1:], row.chars)
+		row.chars = t
+	} else {
+		row.chars = append(
+			row.chars[:at],
+			append(append(make([]byte,0),c), row.chars[at:]...)...
+		)
+	}
+	row.size = len(row.chars)
+	editorUpdateRow(row)
+	E.dirty = true
 }
 
 func editorRowAppendString(row *erow s []byte) {
@@ -834,7 +865,7 @@ func editorScroll() {
 	E.rx = 0
 
 	if (E.cy < E.numRows) {
-		E.rx = editorRowCxToRx(%(E.rows[E.cy]), E.cx)
+		E.rx = editorRowCxToRx(&(E.rows[E.cy]), E.cx)
 	}
 
 	if E.cy < E.rowoff {
@@ -923,13 +954,13 @@ editorDrawRows(ab *bytes.Buffer) {
 				ab.WriteString("\x1b[39m")
 			}
 		}
-		ab.WriteString("\xab[k")
+		ab.WriteString("\x1b[k")
 		ab.WriteString("\r\n")
 	}
 }
 
 func editorDrawStatusBar(ab *bytes.Buffer) {
-	ab.WriteString("\xab[7m")
+	ab.WriteString("\x1b[7m")
 	fname := E.filename
 	if fname == "" {
 		fname = "[No Name]"
@@ -997,3 +1028,4 @@ func main() {
 		editorProcessKeypress()
 	}
 }
+
