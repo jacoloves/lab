@@ -451,6 +451,19 @@ func editorRowCxToRx(row *erow, cx int) int {
 	return rx
 }
 
+func editorRowRxToCx(row *erow, rx int) int {
+	curRx := 0
+	var cx int
+	for cx = 0; cx < row.size; cx++ {
+		if row.chars[cx] == '\t' {
+			curRx += (GILO_TAB_STOP - 1) - (curRx & GILO_TAB_STOP)
+		}
+		curRx++
+		if curRx > rx { break }
+	}
+	return cx
+}
+
 func editorUpdateRow(row *erow) {
 	tabs := 0
 	for _, c := range row.chars {
