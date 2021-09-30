@@ -2,3 +2,5 @@ oauth_sample/credentials.json
 oauth_sample/vendor
 oauth_sample/token.json
 oauth_sample/composer.lock
+rust_project/*/*/target/
+rust_project/*/target/
