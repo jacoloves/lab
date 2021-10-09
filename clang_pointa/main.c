@@ -5,7 +5,7 @@ int main(void)
 {
     char *line;
 
-    while((line = read_line(stdin)) != NULL){
+    while(read_line(stdin, &line) != READ_LINE_EOF){
         printf("%s\n", line);
     }
 

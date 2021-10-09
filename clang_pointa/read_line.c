@@ -50,16 +50,28 @@ ReadLineStatus read_line(FILE *fp, char **line)
     }
     if(ch==EOF){
         if(st_current_used_size > 0){
-            add_character('\0');
+            status=add_character('\0');
+            if(status != READ_LINE_SUCCESS)
+                goto FUNC_END;
         } else {
-            return NULL;
+            status = READ_LINE_EOF;
+            goto FUNC_END;
         }
     }
 
-    ret = malloc(sizeof(char) * st_current_used_size);
-    strcpy(ret, st_line_buffer);
+    *line = malloc(sizeof(char) * st_current_used_size);
+    if(line == NULL){
+        status = READ_LINE_OUT_OF_MEMORY;
+        goto FUNC_END;
+    }
+    strcpy(*line, st_line_buffer);
 
-    return ret;
+FUNC_END:
+    if(status != READ_LINE_SUCCESS && status != READ_LINE_EOF){
+        free_buffer();
+    }
+
+    return status;
 }
 
 void free_buffer(void)
