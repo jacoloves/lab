@@ -15,6 +15,14 @@ fn main() {
         fn next(&mut self) -> Option<Self::Item>;
     }
 
+    let v1: Vec<i32> = vec![1, 2, 3];
+
+    let v2: Vec<_> = v1.iter().map(|x| x + 1).collect();
+
+    v1.iter().map(|x| x + 1);
+
+    assert_eq!(v2, vec![2, 3, 4]);
+
     #[test]
     fn iterator_demonstration() {
         let v1 = vec![1, 2, 3];
