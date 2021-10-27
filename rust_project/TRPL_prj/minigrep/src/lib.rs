@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::fs::File;
-use std::io::prelude::*:
+use std::io::prelude::*;
 
 pub fn run(config: Config) -> Result<(), Box<Error>> {
     let mut f = File::open(config.filename)?;
@@ -28,5 +28,33 @@ impl Config {
         let filename = args[2].clone();
 
         Ok(Config { query, filename })
+    }
+}
+
+fn main() {
+    pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+        for line in contents.lines() {
+            if line.contains(query) {
+                result.push(line);
+            }
+        }
+
+        results
+    }
+
+    #[cfg(test)]
+    mod test {
+        use super::*;
+
+        #[test]
+        fn one_result() {
+            let query = "duct";
+            let contents = "\
+            Rust:
+            safe, fast, productive.
+            pick three.";
+
+            assert_eq!(vec!["sage, fast, productive."], search(query, contents));
+        }
     }
 }

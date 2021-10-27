@@ -1,0 +1,6 @@
+  
+CXX = gcc
+
+CXXFLAGS = -Wall -O2
+
+$@: $(CXX) $(CXXFLAGS) $@.c
