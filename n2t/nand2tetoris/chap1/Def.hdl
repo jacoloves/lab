@@ -1,0 +1,6 @@
+CHIP DEF {
+    IN in;
+    OUT out;
+    BUILTIN DEF;
+    CLOCKED in, out;
+}
