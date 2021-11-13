@@ -24,47 +24,53 @@ const (
 
 const (
 	SELECT_MODE = 100
-	OTHER_MODE  = iota
+	OTHER_MODE  = 100 + iota
 )
 
-func select_word_fornatted(word string, query *string) {
-		if word == "SELECT" {
-				*query += word + "\n" 
-		} else if word == "," {
-				*query += "\t" + word + " "
-		} else if  {
-				*query += word
-		}
+func select_word_formatted(word string, query *string, flg *bool) {
+	if word == "SELECT" {
+		*query += word + "\n"
+	} else if word == "," {
+		*query += "\t" + word + " "
+		*flg = true
+	} else if *flg {
+		*query += word + "\n"
+		*flg = false
+	} else {
+		*query += "\t" + word + "\n"
+	}
 }
 
 func query_formatted(queryes []string) {
-	first_indent_clauses := [...]string{"SELECT", "FROM", "WHERE"}
 	var query_depth_level int
 	var no_caluses string
 	var current_mode int
 	var genetare_query string
+	select_comma_flg := false
 	operator_flg := false
 	queryes[len(queryes)-1] = strings.Replace(queryes[len(queryes)-1], ";", "", 1)
 	for _, s := range queryes {
 		query_depth_level = NO_CALUSE
-		for _, v := range first_indent_clauses {
-			switch strings.ToUpper(v) {
-			case "SELECT":
-				query_depth_level = DEPTH_LEVEL_ONE
-				current_mode = SELECT_MODE
-				break
-			case "FROM":
-			case "WHERE":
-				current_mode = OTHER_MODE
-				query_depth_level = DEPTH_LEVEL_ONE
-				break
-			}
-			if query_depth_level == DEPTH_LEVEL_ONE {
-				break
-			}
+		switch strings.ToUpper(s) {
+		case "SELECT":
+			query_depth_level = DEPTH_LEVEL_ONE
+			current_mode = SELECT_MODE
+			break
+		case "FROM":
+			current_mode = OTHER_MODE
+			query_depth_level = DEPTH_LEVEL_ONE
+			fmt.Printf("%s", genetare_query)
+			genetare_query = ""
+			break
+		case "WHERE":
+			current_mode = OTHER_MODE
+			query_depth_level = DEPTH_LEVEL_ONE
+			fmt.Printf("%s", genetare_query)
+			genetare_query = ""
+			break
 		}
 		if current_mode == SELECT_MODE {
-				select_word_fornatted(s, &genetare_query)	
+			select_word_formatted(s, &genetare_query, &select_comma_flg)
 		} else if query_depth_level == NO_CALUSE {
 			switch s {
 			case GREATER_THAN:
@@ -81,16 +87,16 @@ func query_formatted(queryes []string) {
 			}
 		} else if query_depth_level == DEPTH_LEVEL_ONE {
 			if no_caluses != "" {
-				fmt.Printf("\t%s\n", no_caluses)
+				genetare_query += "\t" + no_caluses + "\n"
 				no_caluses = ""
 				operator_flg = false
 			}
-			fmt.Printf("%s\n", s)
+			genetare_query += s + "\n"
 		}
 	}
-	fmt.Printf("\t%s\n", no_caluses)
+	genetare_query += "\t" + no_caluses + "\n" + ";\n"
 	operator_flg = false
-	fmt.Printf(";\n")
+	fmt.Printf("%s", genetare_query)
 }
 
 func line_space_split(line string) []string {
