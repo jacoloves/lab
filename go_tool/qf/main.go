@@ -24,7 +24,8 @@ const (
 
 const (
 	SELECT_MODE = 100
-	OTHER_MODE  = 100 + iota
+	FROM_MODE   = 100 + iota
+	WHERE_MODE  = 100 + iota
 )
 
 func select_word_formatted(word string, query *string, flg *bool) {
@@ -41,6 +42,10 @@ func select_word_formatted(word string, query *string, flg *bool) {
 	}
 }
 
+func from_word_formatted(word string, query *string) {
+
+}
+
 func query_formatted(queryes []string) {
 	var query_depth_level int
 	var no_caluses string
@@ -53,17 +58,18 @@ func query_formatted(queryes []string) {
 		query_depth_level = NO_CALUSE
 		switch strings.ToUpper(s) {
 		case "SELECT":
-			query_depth_level = DEPTH_LEVEL_ONE
-			current_mode = SELECT_MODE
+			if query_depth_level == NO_CALUSE {
+				current_mode = SELECT_MODE
+			}
 			break
 		case "FROM":
-			current_mode = OTHER_MODE
-			query_depth_level = DEPTH_LEVEL_ONE
 			fmt.Printf("%s", genetare_query)
+			current_mode = FROM_MODE
+			query_depth_level = DEPTH_LEVEL_ONE
 			genetare_query = ""
 			break
 		case "WHERE":
-			current_mode = OTHER_MODE
+			current_mode = WHERE_MODE
 			query_depth_level = DEPTH_LEVEL_ONE
 			fmt.Printf("%s", genetare_query)
 			genetare_query = ""
@@ -71,6 +77,8 @@ func query_formatted(queryes []string) {
 		}
 		if current_mode == SELECT_MODE {
 			select_word_formatted(s, &genetare_query, &select_comma_flg)
+		} else if current_mode == FROM_MODE {
+
 		} else if query_depth_level == NO_CALUSE {
 			switch s {
 			case GREATER_THAN:
