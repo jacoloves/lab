@@ -26,10 +26,11 @@ const (
 	SELECT_MODE = 100
 	FROM_MODE   = 100 + iota
 	WHERE_MODE  = 100 + iota
+	JOIN_MODE   = 100 + iota
 )
 
 func select_word_formatted(word string, query *string, flg *bool) {
-	if word == "SELECT" {
+	if strings.ToUpper(word) == "SELECT" {
 		*query += word + "\n"
 	} else if word == "," {
 		*query += "\t" + word + " "
@@ -42,8 +43,32 @@ func select_word_formatted(word string, query *string, flg *bool) {
 	}
 }
 
-func from_word_formatted(word string, query *string) {
+func from_word_formatted(word string, query *string, depth_level int, inquery_flg bool) {
+	if depth_level == DEPTH_LEVEL_ONE {
+		*query += "\t"
+	}
 
+	if strings.ToUpper(word) == "FROM" {
+		if inquery_flg {
+			*query += word + " "
+		} else {
+			*query += word + "\n"
+		}
+	} else if word == "(" {
+		*query += word + "\n"
+	} else if word == ")" {
+		*query += word + "\n"
+	} else {
+		*query += "\t" + word + "\n"
+	}
+}
+
+func join_word_formatted(word string, query *string) {
+	if strings.ToUpper(word) == "INNER" || strings.ToUpper == "LEFT" {
+		*query += word + " "
+	} else if strings.ToUpper(word) == "JOIN" {
+		*query += word + "\n"
+	}
 }
 
 func query_formatted(queryes []string) {
@@ -51,21 +76,28 @@ func query_formatted(queryes []string) {
 	var no_caluses string
 	var current_mode int
 	var genetare_query string
+	inquery_flg := false
 	select_comma_flg := false
 	operator_flg := false
+	query_cnt := 0
 	queryes[len(queryes)-1] = strings.Replace(queryes[len(queryes)-1], ";", "", 1)
 	for _, s := range queryes {
 		query_depth_level = NO_CALUSE
 		switch strings.ToUpper(s) {
 		case "SELECT":
-			if query_depth_level == NO_CALUSE {
-				current_mode = SELECT_MODE
-			}
+			current_mode = SELECT_MODE
 			break
 		case "FROM":
 			fmt.Printf("%s", genetare_query)
 			current_mode = FROM_MODE
-			query_depth_level = DEPTH_LEVEL_ONE
+			genetare_query = ""
+			if queryes[query_cnt+1] == "(" {
+				inquery_flg = true
+			}
+			break
+		case "INNER", "LEFT":
+			fmt.Printf("%s", genetare_query)
+			current_mode = JOIN_MODE
 			genetare_query = ""
 			break
 		case "WHERE":
@@ -78,6 +110,8 @@ func query_formatted(queryes []string) {
 		if current_mode == SELECT_MODE {
 			select_word_formatted(s, &genetare_query, &select_comma_flg)
 		} else if current_mode == FROM_MODE {
+			from_word_formatted(s, &genetare_query, query_depth_level, inquery_flg)
+		} else if current_mode == JOIN_MODE {
 
 		} else if query_depth_level == NO_CALUSE {
 			switch s {
@@ -101,6 +135,7 @@ func query_formatted(queryes []string) {
 			}
 			genetare_query += s + "\n"
 		}
+		query_cnt++
 	}
 	genetare_query += "\t" + no_caluses + "\n" + ";\n"
 	operator_flg = false
