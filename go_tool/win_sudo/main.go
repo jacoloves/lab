@@ -31,12 +31,18 @@ func arg_check() (string, string) {
 }
 
 func execute(com1 string, com2 string) {
+	fmt.Println(com1)
+	fmt.Println(com2)
 	exec_command := ""
+	exec_command = fmt.Sprintf("powershell -command start-process %s", com1)
+
 	if com2 == "" {
-		exec_command = fmt.Sprintf("powershell -command start-process %s -verb runas", com1)
+		exec_command += " -verb runas"
 	} else {
-		exec_command = fmt.Sprintf("powershell -command start-process %s -verb runas %s", com1, com2)
+		exec_command += fmt.Sprintf(" -verb runas %s", com2)
 	}
+
+	fmt.Println(exec_command)
 
 	cmd := exec.Command("powershell.exe", exec_command)
 	var stderr bytes.Buffer
