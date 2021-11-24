@@ -8,5 +8,6 @@ import (
 
 func main() {
 	str := os.Args[1]
-	fmt.Println(regexp.MustCompile(`\"[A-Za-z]+\"`).Match([]byte(str)))
+	fmt.Println(str)
+	fmt.Println(regexp.MustCompile(`\"+[A-Za-z]+`).Match([]byte(str)))
 }
