@@ -6,8 +6,22 @@ import (
 	"regexp"
 )
 
+func checkReg(str string) bool {
+	checkreg_flg := regexp.MustCompile(`\"+[A-Za-z]+`).Match([]byte(str))
+
+	return checkreg_flg
+}
+
 func main() {
 	str := os.Args[1]
-	fmt.Println(str)
-	fmt.Println(regexp.MustCompile(`\"+[A-Za-z]+`).Match([]byte(str)))
+
+	fmt_str := ""
+
+	if !checkReg(str) {
+		fmt_str = "\"" + str + "\""
+	} else {
+		fmt_str = str
+	}
+
+	fmt.Println(fmt_str)
 }
