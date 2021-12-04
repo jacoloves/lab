@@ -8,7 +8,7 @@ class Program
         /*var x = new CollectionInitializable
         {
             "abc",
-            "def",
+            "deAf",
             "ghi",
         };*/
         var x = new Dictionary<string, int>
