@@ -1,0 +1,14 @@
+C:\Users\81807\tanasho\lab\CsharpSmp\sample6-10\bin\Debug\net6.0\sample6-10.exe
+C:\Users\81807\tanasho\lab\CsharpSmp\sample6-10\bin\Debug\net6.0\sample6-10.deps.json
+C:\Users\81807\tanasho\lab\CsharpSmp\sample6-10\bin\Debug\net6.0\sample6-10.runtimeconfig.json
+C:\Users\81807\tanasho\lab\CsharpSmp\sample6-10\bin\Debug\net6.0\sample6-10.dll
+C:\Users\81807\tanasho\lab\CsharpSmp\sample6-10\bin\Debug\net6.0\ref\sample6-10.dll
+C:\Users\81807\tanasho\lab\CsharpSmp\sample6-10\bin\Debug\net6.0\sample6-10.pdb
+C:\Users\81807\tanasho\lab\CsharpSmp\sample6-10\obj\Debug\net6.0\sample6-10.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\81807\tanasho\lab\CsharpSmp\sample6-10\obj\Debug\net6.0\sample6-10.AssemblyInfoInputs.cache
+C:\Users\81807\tanasho\lab\CsharpSmp\sample6-10\obj\Debug\net6.0\sample6-10.AssemblyInfo.cs
+C:\Users\81807\tanasho\lab\CsharpSmp\sample6-10\obj\Debug\net6.0\sample6-10.csproj.CoreCompileInputs.cache
+C:\Users\81807\tanasho\lab\CsharpSmp\sample6-10\obj\Debug\net6.0\sample6-10.dll
+C:\Users\81807\tanasho\lab\CsharpSmp\sample6-10\obj\Debug\net6.0\ref\sample6-10.dll
+C:\Users\81807\tanasho\lab\CsharpSmp\sample6-10\obj\Debug\net6.0\sample6-10.pdb
+C:\Users\81807\tanasho\lab\CsharpSmp\sample6-10\obj\Debug\net6.0\sample6-10.genruntimeconfig.cache

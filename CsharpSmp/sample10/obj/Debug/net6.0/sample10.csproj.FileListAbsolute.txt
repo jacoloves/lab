@@ -1,0 +1,4 @@
+C:\Users\81807\tanasho\lab\CsharpSmp\sample10\obj\Debug\net6.0\sample10.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\81807\tanasho\lab\CsharpSmp\sample10\obj\Debug\net6.0\sample10.AssemblyInfoInputs.cache
+C:\Users\81807\tanasho\lab\CsharpSmp\sample10\obj\Debug\net6.0\sample10.AssemblyInfo.cs
+C:\Users\81807\tanasho\lab\CsharpSmp\sample10\obj\Debug\net6.0\sample10.csproj.CoreCompileInputs.cache
