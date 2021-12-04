@@ -37,11 +37,17 @@ class Sample
 {
     static void Main()
     {
-        var x = new IntBool(0);
+        var x = new IntBool(1);
+        var y = new IntBool(0);
 
         if (x)
             Console.WriteLine("if true");
         else
             Console.WriteLine("if false");
+
+        Console.WriteLine(x ? "true!" : "false.");
+        Console.WriteLine(x && y);
+        Console.WriteLine(x || y);
+        Console.WriteLine(x | y);
     }
 }
