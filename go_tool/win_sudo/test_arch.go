@@ -34,11 +34,9 @@ func main() {
 	if mode == DQUOTAION_MODE {
 		program_cmd = "\"" + os.Args[1] + "\""
 	} else {
-		for _, v := range os.Args[1 : commond_cnt+1] {
+		for _, v := range os.Args[1:commond_cnt] {
 			if loop_cnt == 0 {
 				program_cmd += "\"" + v + " "
-			} else if loop_cnt == commond_cnt-1 {
-				program_cmd += v + "\""
 			} else {
 				program_cmd += v + " "
 			}
@@ -46,6 +44,9 @@ func main() {
 			loop_cnt++
 		}
 	}
+	program_cmd = program_cmd[:len(program_cmd)-1]
+	program_cmd += "\""
 
 	fmt.Println(program_cmd)
+	fmt.Println(os.Args[commond_cnt])
 }

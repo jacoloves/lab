@@ -5,4 +5,4 @@ motion-test:
 	go build -o test.exe test.go
 
 test:
-	go build -o arch,exe test_arch.go
+	go build -o arch.exe test_arch.go
