@@ -40,7 +40,7 @@
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Image = global::GirlFriend.Properties.Resources.angry;
+            this.pictureBox1.Image = global::GirlFriend.Properties.Resources.normal;
             this.pictureBox1.Location = new System.Drawing.Point(370, 7);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(522, 470);
@@ -84,6 +84,7 @@
             this.button1.TabIndex = 4;
             this.button1.Text = "話す";
             this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // label2
             // 

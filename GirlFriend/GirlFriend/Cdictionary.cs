@@ -53,7 +53,10 @@ namespace GirlFriend
 
             foreach (string line in new_lines)
             {
-                string[] carveLine = line.Split(new char[] { '\t' });
+                // add code
+                // line replace \\t -> \t
+                string rep_line = line.Replace("\\t", "\t");
+                string[] carveLine = rep_line.Split(new char[] { '\t' });
                 _patternList.Add(
                     new ParseItem(
                         carveLine[0],

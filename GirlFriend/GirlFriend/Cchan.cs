@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace GirlFriend
 {
@@ -41,9 +42,11 @@ namespace GirlFriend
         {
             _emotion.Update(input);
             Random rnd = new();
-            int num = rnd.Next();
-
-            if (num < 6)
+            int num = rnd.Next(0, 10);
+            
+            if (Regex.IsMatch(input, "メリークリスマス[!|！]*"))
+                _responder = _res_pattern;
+            else if (num < 6)
                 _responder = _res_pattern;
             else if(num < 9)
                 _responder = _res_random;
