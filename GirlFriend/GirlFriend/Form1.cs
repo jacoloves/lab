@@ -14,7 +14,7 @@ namespace GirlFriend
 
         private void PutLog(string str)
         {
-            textBox2.AppendText(str + "\n");
+            textBox2.AppendText(str + "\r\n");
         }
 
         private string Prompt()
@@ -57,6 +57,23 @@ namespace GirlFriend
                 }
 
                 label2.Text = Convert.ToString(_chan.Emotion.Mood);
+            }
+        }
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+
+            const string message = "ãLâØÇµÇøÇ·Ç¡ÇƒÇ‡OK?";
+            const string caption = "éøñ‚Ç≈Å[Ç∑";
+
+            var result = MessageBox.Show(message,
+                                         caption,
+                                         MessageBoxButtons.YesNo,
+                                         MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes)
+            {
+                _chan.Save();
             }
         }
     }

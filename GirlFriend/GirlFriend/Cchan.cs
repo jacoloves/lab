@@ -53,14 +53,23 @@ namespace GirlFriend
             else
                 _responder = _res_repeat;
 
-            return _responder.Response(
+            string resp = _responder.Response(
                 input,
                 _emotion.Mood);
+
+            _dictionary.Study(input);
+
+            return resp;
         }
 
         public string GetName()
         {
             return _responder.Name;
+        }
+
+        public void Save()
+        {
+            _dictionary.Save();
         }
     }
 }
