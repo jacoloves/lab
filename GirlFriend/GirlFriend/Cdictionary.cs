@@ -21,6 +21,12 @@ namespace GirlFriend
 
         public Cdictionary()
         {
+            MakeRandomList();
+            MakePatternList();
+        }
+
+        private void MakeRandomList()
+        { 
             string[] r_lines = File.ReadAllLines(
                 @"dics\random.txt",
                 System.Text.Encoding.UTF8
@@ -30,11 +36,14 @@ namespace GirlFriend
             {
                 string str = line.Replace("\n", "");
                 if (line != "")
-                { 
+                {
                     _randomList.Add(str);
                 }
-            }
+            } 
+        }
 
+        private void MakePatternList()
+        { 
             string[] p_lines = File.ReadAllLines(
                 @"dics\pattern.txt",
                 System.Text.Encoding.UTF8
@@ -64,6 +73,23 @@ namespace GirlFriend
                     );
             }
         }
-        
+
+        public void Study(string input)
+        {
+            string userInput = input.Replace("\n", "");
+            if (_randomList.Contains(userInput) == false)
+            {
+                _randomList.Add(userInput);
+            }
+        }
+
+        public void Save()
+        {
+            File.WriteAllLines(
+                @"dics\random.txt",
+                _randomList,
+                System.Text.Encoding.UTF8
+                );
+        }
     }
 }
