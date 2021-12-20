@@ -41,6 +41,8 @@ namespace GirlFriend
         public string Dialogue(string input)
         {
             _emotion.Update(input);
+            // {形態素、名詞情報}の配列を格納したリストを取得
+            List<string[]> parts = Analyzer.Analyze(input);
             Random rnd = new();
             int num = rnd.Next(0, 10);
             
@@ -57,7 +59,7 @@ namespace GirlFriend
                 input,
                 _emotion.Mood);
 
-            _dictionary.Study(input);
+            _dictionary.Study(input, parts);
 
             return resp;
         }
