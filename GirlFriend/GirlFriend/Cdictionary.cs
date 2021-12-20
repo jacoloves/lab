@@ -74,12 +74,51 @@ namespace GirlFriend
             }
         }
 
-        public void Study(string input)
+        public void Study(string input, List<string[]> parts)
         {
             string userInput = input.Replace("\n", "");
+            StudyRandom(userInput);
+            StudyPattern(userInput, parts);
+        }
+
+        // ランダム辞書に追加する
+        public void StudyRandom(string userInput)
+        {
             if (_randomList.Contains(userInput) == false)
             {
                 _randomList.Add(userInput);
+            }
+        }
+
+        // パターン辞書に追加する
+        public void StudyPattern(string userInput, List<string[]> parts)
+        {
+            foreach (string[] morpheme in parts)
+            {
+                if (Analyzer.KeyWordCheck(morpheme[1]).Success)
+                {
+                    ParseItem? depend = null;
+
+                    foreach (ParseItem item in _patternList)
+                    {
+                        if (!string.IsNullOrEmpty(item.Match(userInput)))
+                        {
+                            depend = item;
+                            break;
+                        }
+                    }
+
+                    if (depend != null)
+                    {
+                        depend.AddPhrase(userInput);
+                    }
+                    else
+                    {
+                        _patternList.Add(new ParseItem(
+                            morpheme[0],
+                            userInput));
+                    }
+                }
             }
         }
 
@@ -88,6 +127,19 @@ namespace GirlFriend
             File.WriteAllLines(
                 @"dics\random.txt",
                 _randomList,
+                System.Text.Encoding.UTF8
+                );
+
+            List<string> patternLine = new();
+
+            foreach (ParseItem item in _patternList)
+            {
+                patternLine.Add(item.MakeLine());
+            }
+
+            File.WriteAllLines(
+                @"dics\test_pattern.txt",
+                patternLine,
                 System.Text.Encoding.UTF8
                 );
         }

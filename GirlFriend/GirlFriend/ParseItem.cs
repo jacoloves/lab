@@ -97,5 +97,32 @@ namespace GirlFriend
             else
                 return (mood < need);
         }
+
+        public void AddPhrase(string userInput)
+        {
+            foreach (var p in _phrases)
+            {
+                if (p["phrase"] == userInput)
+                    return;
+            }
+
+            _phrases.Add(
+                new Dictionary<string, string> {
+                    { "need", "0" }, {  "phrase", userInput }
+                });
+        }
+
+        public string MakeLine()
+        {
+            string pattern = Convert.ToString(_modify) + "##" + _pattern;
+            StringBuilder responseList = new();
+
+            foreach (var dic in _phrases)
+            {
+                responseList.Append("|" + dic["need"] + "##" + dic["phrase"]);
+            }
+
+            return pattern + "\\t" + responseList;
+        }
     }
 }
