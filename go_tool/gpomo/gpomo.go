@@ -9,6 +9,11 @@ import (
 	"time"
 )
 
+func clear() {
+	fmt.Print("\x1b[2J")
+	fmt.Print("\x1b[H")
+}
+
 func progressTime() {
 	start := time.Now()
 	var elapsed time.Duration
@@ -63,9 +68,11 @@ func main() {
 	}()
 
 	for {
+		clear()
 		progressTime()
 		fmt.Print("Please Push Enter")
 		bufio.NewReader(os.Stdin).ReadBytes('\n')
+		clear()
 		breakTime()
 		fmt.Print("Please Push Enter")
 		bufio.NewReader(os.Stdin).ReadBytes('\n')
