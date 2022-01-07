@@ -19,7 +19,7 @@ func clear() {
 	fmt.Print("\x1b[H")
 }
 
-func progressTime() {
+func progressTime(consTime *int) {
 	start := time.Now()
 	var elapsed time.Duration
 	var m, s int64
@@ -36,6 +36,7 @@ func progressTime() {
 		}
 	}
 	fmt.Println()
+	*consTime++
 }
 
 func breakTime() {
@@ -85,18 +86,21 @@ func outputMusuic() {
 }
 
 func main() {
+	concentrationNum := 0
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		<-c
 		fmt.Println()
+		fmt.Println(concentrationNum)
 		fmt.Println("finish!")
 		os.Exit(0)
 	}()
 
 	for {
 		clear()
-		progressTime()
+		progressTime(&concentrationNum)
 		fmt.Print("Please Push Enter")
 		outputMusuic()
 		bufio.NewReader(os.Stdin).ReadBytes('\n')
