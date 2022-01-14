@@ -1,0 +1,1 @@
+/home/stanaka/.config/nvim/pack/plugins/start
