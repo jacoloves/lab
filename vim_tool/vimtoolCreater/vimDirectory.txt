@@ -1,1 +1,4 @@
-/home/stanaka/.config/nvim/pack/plugins/start
+// Vim
+~/.vim/pack/plugins/start
+// NeoVim
+~/.config/nvim/pack/plugins/start
