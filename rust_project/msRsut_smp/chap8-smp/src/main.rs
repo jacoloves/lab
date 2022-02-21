@@ -29,6 +29,73 @@ impl Area for Rectangle {
     }
 }
 
+#[derive(Debug, PartialEq)]
+struct Point2 { 
+    x: i32, 
+    y: i32,
+}
+
+use std::fmt;
+impl fmt::Display for Point2 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
+    }
+}
+
+trait AsJson {
+    fn as_json(&self) -> String;
+}
+
+fn send_data_as_json(value: &impl AsJson) {
+    println!("Sending Json data to server...");
+    println!("-> {}", value.as_json());
+    println!("Done!\n");
+}
+
+struct Person {
+    name: String,
+    age: u8,
+    favorite_fruit: String,
+}
+
+struct Dog {
+    name: String, 
+    color: String, 
+    likes_petting: bool,
+}
+
+impl AsJson for Person {
+    fn as_json(&self) ->String {
+        format!(
+            r#"{{ "type": "person", "name": "{}", "age": {}, "favoriteFruit": "{}" }}"#,
+            self.name, self.age, self.favorite_fruit
+        )
+    }
+}
+
+impl AsJson for Dog {
+    fn as_json(&self) ->String {
+        format!(
+            r#"{{ "type": "dog", "name": "{}", "color": "{}", "likesPetting": "{}"}}"#,
+            self.name, self.color, self.likes_petting
+        )
+    }
+}
+
+struct Cat {
+    name: String,
+    sharp_claws: bool,
+}
+
+impl AsJson for Cat {
+    fn as_json(&self) -> String {
+        format!(
+            r#"{{ "type": "cat", "name": "{}", "sharpClaws": "{}"}}"#,
+            self.name, self.sharp_claws
+        )
+    }
+}
+
 fn main() {
     let boolean = Point { x: true, y: false };
     let integer = Point { x: 1, y: 9 };
@@ -45,4 +112,40 @@ fn main() {
 
     println!("Circle area: {}", circle.area());
     println!("Rectangle area: {}", rectangle.area());
+
+    println!("--- Unit 4/8 ---");
+    let p1 = Point2 {x: 1, y: 2};
+    let p2 = Point2 {x: 4, y: -3};
+
+    if p1 == p2 {
+        println!("equal!");
+    } else {
+        println!("not equal!");
+    }
+
+    println!("{}", p1);
+    println!("{:?}", p1);
+    
+    println!("--- Unit 5/8 ---");
+    let laura = Person {
+        name: String::from("Laura"),
+        age: 31,
+        favorite_fruit: String::from("apples"),
+    };
+
+    let fido = Dog {
+        name: String::from("Fido"),
+        color: String::from("Black"),
+        likes_petting: true,
+    };
+
+    send_data_as_json(&laura);
+    send_data_as_json(&fido);
+
+    let kitty = Cat {
+        name: String::from("Kitty"),
+        sharp_claws: false,
+    };
+
+    send_data_as_json(&kitty);
 }
