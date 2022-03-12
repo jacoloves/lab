@@ -4,6 +4,7 @@ use serde::Serialize;
 use std::io::{Error, ErrorKind, Result, Seek, SeekFrom};
 use std::path::PathBuf;
 use std::fs::{File, OpenOptions};
+use std::fmt;
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Task {
     pub text: String,
@@ -19,20 +20,23 @@ impl Task {
     }
 }
 
+fn collect_tasks(mut file: &File) -> Result<Vec<Task>> {
+    file.seek(SeekFrom::Start(0))?;
+    let tasks = match serde_json::from_reader(file) {
+        Ok(tasks) => tasks,
+        Err(e) if e.is_eof() => Vec::new(),
+        Err(e) => Err(e)?,
+    };
+    file.seek(SeekFrom::Start(0))?;
+    Ok(tasks)
+}
+
 pub fn add_task(jornal_path: PathBuf, task: Task) -> Result<()> {
     let mut file = OpenOptions::new().read(true).write(true).create(true).open(jornal_path)?;
 
-    let mut tasks: Vec<Task> = match serde_json::from_reader(&file) {
-        Ok(tasks) => tasks,
-        Err(e) if e.is_eof() => Vec::new(), 
-        Err(e) => Err(e)?,
-    };
-
-    file.seek(SeekFrom::Start(0))?;
-
+    let mut tasks = collect_tasks(&file)?;
     tasks.push(task);
     serde_json::to_writer(file, &tasks)?;
-
     Ok(())
 }
 
@@ -48,4 +52,27 @@ pub fn complete_task(journal_path: PathBuf, task_position: usize) -> Result<()> 
     
 }
 
-pub fn liset_tasks(journal_path: PathBuf) -> Result<()> {}
+pub fn liset_tasks(journal_path: PathBuf) -> Result<()> {
+    let file = OpenOptions::new().read(true).write(true).open(journal_path)?;
+
+    let tasks = collect_tasks(&file)?;
+
+    if tasks.is_empty() {
+        println!("Task list is empty!");
+    } else {
+        let mut order: u32 = 1;
+        for task in tasks {
+            println!("{}: {}", order, task);
+            order += 1;
+        }
+    }
+
+    Ok(())
+}
+
+impl fmt::Display for Task {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let created_at = self.created_at.with_timezone(&Local).format("%F %H:%M");
+        write!(f, "{:<50} [{}]", self.text, created_at)
+    }
+}
