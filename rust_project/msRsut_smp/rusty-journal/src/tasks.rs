@@ -32,7 +32,7 @@ fn collect_tasks(mut file: &File) -> Result<Vec<Task>> {
 }
 
 pub fn add_task(jornal_path: PathBuf, task: Task) -> Result<()> {
-    let mut file = OpenOptions::new().read(true).write(true).create(true).open(jornal_path)?;
+    let file = OpenOptions::new().read(true).write(true).create(true).open(jornal_path)?;
 
     let mut tasks = collect_tasks(&file)?;
     tasks.push(task);
@@ -41,15 +41,18 @@ pub fn add_task(jornal_path: PathBuf, task: Task) -> Result<()> {
 }
 
 pub fn complete_task(journal_path: PathBuf, task_position: usize) -> Result<()> {
-    let file = OpenOptions::new().read(true).write(true).open(jornal_path)?;
+    let file = OpenOptions::new().read(true).write(true).open(journal_path)?;
 
-    let tasks = match serde_json::from_reader(file) {
-        Ok(tasks) => tasks,
-        Err(e) if e.is_eof() => Vec::new(),
-        Err(e) => Err(e)?,
-    };
+    let mut tasks = collect_tasks(&file)?;
 
-    
+    if task_position == 0 || task_position > tasks.len() {
+        return Err(Error::new(ErrorKind::InvalidInput, "Invalid Task ID"));
+    }
+    tasks.remove(task_position - 1);
+
+    file.set_len(0)?;
+    serde_json::to_writer(file, &tasks)?;
+    Ok(())
 }
 
 pub fn liset_tasks(journal_path: PathBuf) -> Result<()> {
