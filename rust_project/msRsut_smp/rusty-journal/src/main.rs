@@ -15,7 +15,7 @@ fn find_default_journal_file() -> Option<PathBuf> {
     })
 }
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let CommandLineArgs {
         action,
         journal_file,
@@ -25,7 +25,7 @@ fn main() {
 
     match action {
         Add { task } => tasks::add_task(journal_file, Task::new(task)),
-        List => tasks::liset_tasks(journal_file),
+        List => tasks::list_tasks(journal_file),
         Done { position } => tasks::complete_task(journal_file, position),
     }?;
     Ok(())
