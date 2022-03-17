@@ -13,10 +13,10 @@ var (
 	createUserRe = regexp.MustCompile(`^\/users[\/]*$`)
 )
 
-// user represents our REST resource
-type user struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+// holiday represents our REST resource
+type holiday struct {
+	Title string `json:"title"`
+	Date  string `json:"date"`
 }
 
 // our in-memory datastore
