@@ -8,9 +8,8 @@ import (
 )
 
 var (
-	listUserRe   = regexp.MustCompile(`^\/users[\/]*$`)
-	getUserRe    = regexp.MustCompile(`^\/users\/(\d+)$`)
-	createUserRe = regexp.MustCompile(`^\/users[\/]*$`)
+	listUserRe = regexp.MustCompile(`^\/holiday[\/]*$`)
+	getUserRe  = regexp.MustCompile(`^\/holiday\/(\d+)$`)
 )
 
 // holiday represents our REST resource
@@ -22,15 +21,15 @@ type holiday struct {
 // our in-memory datastore
 // remember to guard map access with a mutex for  concurrent access
 type datastore struct {
-	m map[string]user
+	m map[string]holiday
 	*sync.RWMutex
 }
 
-type userHandler struct {
+type holidayHandler struct {
 	store *datastore
 }
 
-func (h *userHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *holidayHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// all users request are going to be routed here
 	w.Header().Set("content-type", "application/json")
 	switch {
@@ -46,14 +45,14 @@ func (h *userHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *userHandler) List(w http.ResponseWriter, r *http.Request) {
+func (h *holidayHandler) List(w http.ResponseWriter, r *http.Request) {
 	h.store.RLock()
-	users := make([]user, 0, len(h.store.m))
+	holiday := make([]holiday, 0, len(h.store.m))
 	for _, v := range h.store.m {
-		users = append(users, v)
+		holiday = append(holiday, v)
 	}
 	h.store.RUnlock()
-	jsonBytes, err := json.Marshal(users)
+	jsonBytes, err := json.Marshal(holiday)
 	if err != nil {
 		internalServerError(w, r)
 		return
@@ -62,7 +61,7 @@ func (h *userHandler) List(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonBytes)
 }
 
-func (h *userHandler) Get(w http.ResponseWriter, r *http.Request) {
+func (h *holidayHandler) Get(w http.ResponseWriter, r *http.Request) {
 	matches := getUserRe.FindStringSubmatch(r.URL.Path)
 	if len(matches) < 2 {
 		notFound(w, r)
@@ -97,16 +96,16 @@ func notFound(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	mux := http.NewServeMux()
-	userH := &userHandler{
+	holidayH := &holidayHandler{
 		store: &datastore{
-			m: map[string]user{
-				"1": user{ID: "1", Name: "bob"},
+			m: map[string]holiday{
+				"1": holiday{Title: "元旦", Date: "2022-01-01"},
 			},
 			RWMutex: &sync.RWMutex{},
 		},
 	}
-	mux.Handle("/users", userH)
-	mux.Handle("/users/", userH)
+	mux.Handle("/holiday", holidayH)
+	mux.Handle("/holiday/", holidayH)
 
 	http.ListenAndServe("localhost:8080", mux)
 }
