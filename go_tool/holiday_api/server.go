@@ -12,16 +12,24 @@ var (
 	getUserRe  = regexp.MustCompile(`^\/holiday\/(\d+)$`)
 )
 
-// holiday represents our REST resource
-type holiday struct {
+// data represents our REST resource
+type data struct {
 	Title string `json:"title"`
 	Date  string `json:"date"`
+}
+
+type holiday struct {
+	Year string `json:"year"`
+	Data struct {
+		Title string `json:"Title"`
+		Date  string `json:"Date"`
+	} `json:"data"`
 }
 
 // our in-memory datastore
 // remember to guard map access with a mutex for  concurrent access
 type datastore struct {
-	m map[string]holiday
+	m map[string]data
 	*sync.RWMutex
 }
 
@@ -47,7 +55,7 @@ func (h *holidayHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *holidayHandler) List(w http.ResponseWriter, r *http.Request) {
 	h.store.RLock()
-	holiday := make([]holiday, 0, len(h.store.m))
+	holiday := make([]data, 0, len(h.store.m))
 	for _, v := range h.store.m {
 		holiday = append(holiday, v)
 	}
@@ -98,8 +106,8 @@ func main() {
 	mux := http.NewServeMux()
 	holidayH := &holidayHandler{
 		store: &datastore{
-			m: map[string]holiday{
-				"1": holiday{Title: "元旦", Date: "2022-01-01"},
+			m: map[string]data{
+				"1": data{Title: "元旦", Date: "2022-01-01"},
 			},
 			RWMutex: &sync.RWMutex{},
 		},
