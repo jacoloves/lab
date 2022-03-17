@@ -40,9 +40,6 @@ func (h *userHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case r.Method == http.MethodGet && getUserRe.MatchString(r.URL.Path):
 		h.Get(w, r)
 		return
-	case r.Method == http.MethodPost && createUserRe.MatchString(r.URL.Path):
-		h.Create(w, r)
-		return
 	default:
 		notFound(w, r)
 		return
@@ -79,24 +76,6 @@ func (h *userHandler) Get(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("user not found"))
 		return
 	}
-	jsonBytes, err := json.Marshal(u)
-	if err != nil {
-		internalServerError(w, r)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonBytes)
-}
-
-func (h *userHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var u user
-	if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
-		internalServerError(w, r)
-		return
-	}
-	h.store.Lock()
-	h.store.m[u.ID] = u
-	h.store.Unlock()
 	jsonBytes, err := json.Marshal(u)
 	if err != nil {
 		internalServerError(w, r)
