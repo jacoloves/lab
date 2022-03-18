@@ -10,8 +10,8 @@ type Data_2022 []struct {
 	Date  string `json:"Date"`
 }
 
-func holiday_2022() []Holiday_2022 {
-	holidays_2022 := []Holiday_2022{{
+func holiday_2022() Holiday_2022 {
+	holidays_2022 := Holiday_2022{
 		Year: "2022",
 		Data: Data_2022{
 			{
@@ -27,7 +27,7 @@ func holiday_2022() []Holiday_2022 {
 				Date:  "2022-02-11",
 			},
 		},
-	}}
+	}
 
 	return holidays_2022
 }
