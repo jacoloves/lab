@@ -27,7 +27,14 @@ type HolidayHandler struct {
 }
 
 func (h *HolidayHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
+	switch {
+	case r.Method == http.MethodGet && listHolidayRe.MatchString(r.URL.Path):
+		return
+	case r.Method == http.MethodGet && getHolidayRe.MatchString(r.URL.Path):
+		return
+	default:
+		return
+	}
 	/*
 		_, err := fmt.Fprint(w, len(h.store.m))
 		if err != nil {
