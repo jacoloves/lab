@@ -9,7 +9,7 @@ import (
 
 var (
 	listHolidayRe = regexp.MustCompile(`^\/holiday[\/]*$`)
-	getHolidayRe  = regexp.MustCompile(`^\/holiday\/?year=(\d+)$`)
+	getHolidayRe  = regexp.MustCompile(`^\/holiday?year=(\d+)$`)
 )
 
 type Data []struct {
@@ -32,6 +32,7 @@ func (h *dateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.List(w, r)
 		return
 	case r.Method == http.MethodGet && getHolidayRe.MatchString(r.URL.Path):
+		h.Get(w, r)
 		return
 	default:
 		return
@@ -52,6 +53,10 @@ func (h *dateHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonBytes)
+}
+
+func (h *dateHandler) Get(w http.ResponseWriter, r *http.Request) {
+
 }
 
 func internalServerError(w http.ResponseWriter, r *http.Request) {
@@ -77,6 +82,7 @@ func main() {
 	}
 
 	mux.Handle("/holiday", dHandler)
+	mux.Handle("/holiday/", dHandler)
 
 	http.ListenAndServe("localhost:8080", mux)
 }
