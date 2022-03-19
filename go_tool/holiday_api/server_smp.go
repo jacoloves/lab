@@ -47,11 +47,16 @@ func (h *dateHandler) List(w http.ResponseWriter, r *http.Request) {
 	h.store.RUnlock()
 	jsonBytes, err := json.MarshalIndent(holiday, " ", " ")
 	if err != nil {
-		panic(err)
+		internalServerError(w, r)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonBytes)
+}
+
+func internalServerError(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusInternalServerError)
+	w.Write([]byte("internal server error"))
 }
 
 func main() {
