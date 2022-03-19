@@ -18,78 +18,60 @@ type Data []struct {
 }
 
 type datastore struct {
-	m map[string]string
+	m map[string]Data
 	*sync.RWMutex
 }
 
-type HolidayHandler struct {
+type dateHandler struct {
 	store *datastore
 }
 
-func (h *HolidayHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *dateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodGet && listHolidayRe.MatchString(r.URL.Path):
+		h.List(w, r)
 		return
 	case r.Method == http.MethodGet && getHolidayRe.MatchString(r.URL.Path):
 		return
 	default:
 		return
 	}
-	/*
-		_, err := fmt.Fprint(w, len(h.store.m))
-		if err != nil {
-			return
-		}
-		for _, v := range h.store.m {
-			_, err := fmt.Fprint(w, v+",")
-			if err != nil {
-				return
-			}
-		}
-	*/
-	/*
-			_, err := fmt.Fprint(w, h.store.m)
-		if err != nil {
-			return
-		}
-	*/
+}
+
+func (h *dateHandler) List(w http.ResponseWriter, r *http.Request) {
+	h.store.RLock()
+	holiday := make([]Data, 0, len(h.store.m))
+	for _, v := range h.store.m {
+		holiday = append(holiday, v)
+	}
+	h.store.RUnlock()
+	jsonBytes, err := json.MarshalIndent(holiday, " ", " ")
+	if err != nil {
+		panic(err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonBytes)
 }
 
 func main() {
 	h1 := holiday_2021()
-
-	s1, err := json.MarshalIndent(h1, " ", " ")
-	if err != nil {
-		panic(err)
-	}
-
 	h2 := holiday_2022()
-
-	s2, err := json.MarshalIndent(h2, " ", " ")
-	if err != nil {
-		panic(err)
-	}
-
 	h3 := holiday_2023()
 
-	s3, err := json.MarshalIndent(h3, " ", " ")
-	if err != nil {
-		panic(err)
-	}
-
 	mux := http.NewServeMux()
-	hHandler := &HolidayHandler{
+	dHandler := &dateHandler{
 		store: &datastore{
-			m: map[string]string{
-				"2021": string(s1),
-				"2022": string(s2),
-				"2023": string(s3),
+			m: map[string]Data{
+				"2021": Data(h1),
+				"2022": Data(h2),
+				"2023": Data(h3),
 			},
 			RWMutex: &sync.RWMutex{},
 		},
 	}
 
-	mux.Handle("/holiday", hHandler)
+	mux.Handle("/holiday", dHandler)
 
 	http.ListenAndServe("localhost:8080", mux)
 }
