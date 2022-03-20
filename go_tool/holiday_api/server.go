@@ -8,43 +8,34 @@ import (
 )
 
 var (
-	listUserRe = regexp.MustCompile(`^\/holiday[\/]*$`)
-	getUserRe  = regexp.MustCompile(`^\/holiday\/(\d+)$`)
+	listHolidayRe = regexp.MustCompile(`^\/holiday[\/]*$`)
+	getHolidayRe  = regexp.MustCompile(`^\/holiday\/year\/(\d+)$`)
 )
 
-// data represents our REST resource
-type data struct {
-	Title string `json:"title"`
-	Date  string `json:"date"`
+type Data []struct {
+	Title string `json:"Title"`
+	Date  string `json:"Date"`
 }
 
-type holiday struct {
-	Year string `json:"year"`
-	Data struct {
-		Title string `json:"Title"`
-		Date  string `json:"Date"`
-	} `json:"data"`
-}
-
-// our in-memory datastore
-// remember to guard map access with a mutex for  concurrent access
 type datastore struct {
-	m map[string]data
+	m map[string]Data
 	*sync.RWMutex
 }
 
-type holidayHandler struct {
+type dateHandler struct {
 	store *datastore
 }
 
-func (h *holidayHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// all users request are going to be routed here
-	w.Header().Set("content-type", "application/json")
+type I interface {
+	convData(title string, date string)
+}
+
+func (h *dateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
-	case r.Method == http.MethodGet && listUserRe.MatchString(r.URL.Path):
+	case r.Method == http.MethodGet && listHolidayRe.MatchString(r.URL.Path):
 		h.List(w, r)
 		return
-	case r.Method == http.MethodGet && getUserRe.MatchString(r.URL.Path):
+	case r.Method == http.MethodGet && getHolidayRe.MatchString(r.URL.Path):
 		h.Get(w, r)
 		return
 	default:
@@ -53,14 +44,14 @@ func (h *holidayHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *holidayHandler) List(w http.ResponseWriter, r *http.Request) {
+func (h *dateHandler) List(w http.ResponseWriter, r *http.Request) {
 	h.store.RLock()
-	holiday := make([]data, 0, len(h.store.m))
+	holiday := make([]Data, 0, len(h.store.m))
 	for _, v := range h.store.m {
 		holiday = append(holiday, v)
 	}
 	h.store.RUnlock()
-	jsonBytes, err := json.Marshal(holiday)
+	jsonBytes, err := json.MarshalIndent(holiday, " ", " ")
 	if err != nil {
 		internalServerError(w, r)
 		return
@@ -69,21 +60,20 @@ func (h *holidayHandler) List(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonBytes)
 }
 
-func (h *holidayHandler) Get(w http.ResponseWriter, r *http.Request) {
-	matches := getUserRe.FindStringSubmatch(r.URL.Path)
+func (h *dateHandler) Get(w http.ResponseWriter, r *http.Request) {
+	matches := getHolidayRe.FindStringSubmatch(r.URL.Path)
 	if len(matches) < 2 {
 		notFound(w, r)
 		return
 	}
 	h.store.RLock()
-	u, ok := h.store.m[matches[1]]
-	h.store.RUnlock()
+	y, ok := h.store.m[matches[1]]
 	if !ok {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("user not found"))
+		w.Write([]byte("year not found"))
 		return
 	}
-	jsonBytes, err := json.Marshal(u)
+	jsonBytes, err := json.MarshalIndent(y, " ", " ")
 	if err != nil {
 		internalServerError(w, r)
 		return
@@ -103,17 +93,24 @@ func notFound(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	h1 := holiday_2021()
+	h2 := holiday_2022()
+	h3 := holiday_2023()
+
 	mux := http.NewServeMux()
-	holidayH := &holidayHandler{
+	dHandler := &dateHandler{
 		store: &datastore{
-			m: map[string]data{
-				"1": data{Title: "元旦", Date: "2022-01-01"},
+			m: map[string]Data{
+				"2021": Data(h1),
+				"2022": Data(h2),
+				"2023": Data(h3),
 			},
 			RWMutex: &sync.RWMutex{},
 		},
 	}
-	mux.Handle("/holiday", holidayH)
-	mux.Handle("/holiday/", holidayH)
+
+	mux.Handle("/holiday", dHandler)
+	mux.Handle("/holiday/", dHandler)
 
 	http.ListenAndServe("localhost:8080", mux)
 }
