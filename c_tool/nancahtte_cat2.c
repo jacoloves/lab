@@ -8,6 +8,7 @@
 
 #define BUFFER_SIZE 2048 
 
+static void do_cat_tab_newline_trans(const char *path);
 static do_line();
 
 int main(int argc, cahr *argv[])
@@ -17,6 +18,20 @@ int main(int argc, cahr *argv[])
         do_line();
         exit(0);
    }
+   for (i=1; i<argc; i++) {
+        do_cat_tab_newline_trans (argv[i]);
+   }
+   exit(0);
+}
+
+static void do_cat_tab_newline_trans(const char *path)
+{
+    int fd;
+    unsigned char buf[BUFFER_SIZE];
+    int n;
+
+    fd = open(path, O_RDONLY);
+    if (fd < 0) die(path);
 }
 
 static void do_line()
