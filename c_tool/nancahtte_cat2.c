@@ -18,3 +18,16 @@ int main(int argc, cahr *argv[])
         exit(0);
    }
 }
+
+static void do_line()
+{
+    unsigned char buf[BUFFER_SIZE];
+    int n;
+    for (;;) {
+        n = read(STDIN_FILENO, buf, sizeof buf);
+        if (write(STDOUT_FILENO, buf, n) < 0) {
+            err(EXIT_FAILURE, "write_error");
+            exit(1);
+        }
+    }
+}
