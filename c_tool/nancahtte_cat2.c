@@ -9,6 +9,7 @@
 #define BUFFER_SIZE 2048 
 
 static void do_cat_tab_newline_trans(const char *path);
+static void die(const char *s);
 static do_line();
 
 int main(int argc, cahr *argv[])
@@ -45,4 +46,10 @@ static void do_line()
             exit(1);
         }
     }
+}
+
+static void die(const char *s)
+{
+    perror(s);
+    exit(1);
 }
