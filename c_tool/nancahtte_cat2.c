@@ -29,10 +29,21 @@ static void do_cat_tab_newline_trans(const char *path)
 {
     int fd;
     unsigned char buf[BUFFER_SIZE];
-    int n;
+    ssize_t n;
 
     fd = open(path, O_RDONLY);
     if (fd < 0) die(path);
+    for (;;) {
+        n = read(fd, buf, sizeof buf);
+        if (n < 0) die(path);
+        if (n == 0) break;
+        for (int i=0; i<n; ++i) {
+            if (buf[i] == '\t') buf[i] == '\\t';
+            if (buf[i] == '\n') buf[i] == '$n';
+        }
+        if (write(STDIN_FILENO, buf, n) < 0) die(path);
+    }
+    if (close(fd) < 0) die(path);
 }
 
 static void do_line()
