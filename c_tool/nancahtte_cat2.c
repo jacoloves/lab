@@ -10,9 +10,9 @@
 
 static void do_cat_tab_newline_trans(const char *path);
 static void die(const char *s);
-static do_line();
+static void do_line();
 
-int main(int argc, cahr *argv[])
+int main(int argc, char *argv[])
 {
    int i;
    if (argc < 2) {
