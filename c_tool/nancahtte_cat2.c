@@ -30,6 +30,7 @@ static void do_cat_tab_newline_trans(const char *path)
     int fd;
     unsigned char buf[BUFFER_SIZE];
     ssize_t n;
+    char const *p;
 
     fd = open(path, O_RDONLY);
     if (fd < 0) die(path);
@@ -37,11 +38,20 @@ static void do_cat_tab_newline_trans(const char *path)
         n = read(fd, buf, sizeof buf);
         if (n < 0) die(path);
         if (n == 0) break;
+        p = buf;
         for (int i=0; i<n; ++i) {
-            if (buf[i] == '\t') buf[i] == '\\t';
-            if (buf[i] == '\n') buf[i] == '$n';
+            switch(p[i]) {
+                case '\t':
+                    if (fputs("\\t", stdout) == EOF) exit(1);
+                    break;
+                case '\n':
+                    if (fputs("$\n", stdout) == EOF) exit(1);
+                    break;
+                default:
+                    if (putchar(p[i]) < 0) exit(1);
+                    break;
+            }
         }
-        if (write(STDIN_FILENO, buf, n) < 0) die(path);
     }
     if (close(fd) < 0) die(path);
 }
