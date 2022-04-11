@@ -10,6 +10,8 @@
 
 #define BUFFER_SIZE 2048
 
+static void do_stdio_wcl(const char *path, int *sum);
+
 int main(int argc, char *argv[])
 {
     int i;
@@ -22,4 +24,9 @@ int main(int argc, char *argv[])
         do_stdio_wcl(argv[i], &sum);
     }
     exit(0);
+}
+
+static void do_stdio_wcl(const char *path, int *sum) 
+{
+    
 }
