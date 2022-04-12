@@ -11,6 +11,7 @@
 #define BUFFER_SIZE 2048
 
 static void do_stdio_wcl(const char *path, int *sum);
+static void die(const char *s);
 
 int main(int argc, char *argv[])
 {
@@ -28,5 +29,16 @@ int main(int argc, char *argv[])
 
 static void do_stdio_wcl(const char *path, int *sum) 
 {
-    
+   int fd;
+
+   if(-1 == (fd = open(path, O_RDONLY))){
+        die(path);
+   }
+
+}
+
+static void die(const char *s)
+{
+    perror(s);
+    exit(1);
 }
