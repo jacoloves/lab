@@ -30,11 +30,37 @@ int main(int argc, char *argv[])
 static void do_stdio_wcl(const char *path, int *sum) 
 {
    int fd;
+   FILE *fp;
+   size_t fr;
+   unsigned char buf[BUFFER_SIZE];
+   char const *p;
+   int lines = 0;
 
    if(-1 == (fd = open(path, O_RDONLY))){
         die(path);
    }
+   if (NULL == (fp = fdopen(fd, "r"))) {
+       perror("fdopen failed");
+       close(fd);
+       exit(1);
+   }
+    
+   fr = fread(buf, sizeof(char), BUFFER_SIZE, fp);
+    
+   p = buf;
+   for (int i=0; i<fr; ++i) {
+        if (p[i] == '\n') lines++;
+   }
 
+   if (fclose(fp)) {
+        perror("fclose error");
+        close(fd);
+        exit(1);
+   }
+
+   if (close(fd) < 0) err(EXIT_FAILURE, "file close failed");
+    
+   printf("%d %s\n", lines, path);
 }
 
 static void die(const char *s)
