@@ -4,9 +4,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <err.h>
-#include <errno.h>
-#include <string.h>
 
 #define BUFFER_SIZE 2048
 
@@ -58,8 +55,6 @@ static void do_stdio_wcl(const char *path, int *sum)
         exit(1);
    }
 
-   if (close(fd) < 0) err(EXIT_FAILURE, "file close failed");
-    
    printf("%d %s\n", lines, path);
 }
 
