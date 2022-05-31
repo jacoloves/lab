@@ -2,92 +2,112 @@ package main
 
 import (
 	"fmt"
-	"io/fs"
+	"io/ioutil"
+	"os"
 	"path/filepath"
-	"strings"
 )
 
 const (
 	DirBrunch   string = "├──"
 	LastBrunch  string = "└──"
 	BrunchSpace string = "│   "
-	DepthSpace  string = "   "
+	DepthSpace  string = "    "
 )
 
-type PathCondition struct {
-	filename   string
-	depth      int
-	isDir      bool
-	isLastFile bool
-}
-
-func getPathCondition(path string, dirFlag bool) PathCondition {
-	var pathcon PathCondition
-	pathcon.depth = strings.Count(path, "/")
-	pathcon.isLastFile = false
-	_, pathcon.filename = filepath.Split(path)
-	if dirFlag {
-		pathcon.isDir = true
+func stringFormat(nodeFlg bool, lastFlg bool) string {
+	var format string
+	if nodeFlg && lastFlg {
+		format = LastBrunch
+	} else if nodeFlg {
+		format = DirBrunch
+	} else if lastFlg {
+		format = LastBrunch
 	} else {
-		pathcon.isDir = false
+		format = DirBrunch
 	}
-	return pathcon
+
+	return format
 }
 
-func dirWalker() ([]string, []PathCondition) {
-	var paths []string
-	var pcs []PathCondition
-	cnt := 0 // WalkDir do count
-	err := filepath.WalkDir(".", func(path string, d fs.DirEntry, err error) error {
-		notCurrentDirFlg := false
-		dirFlg := false
-		if err != nil {
-			fmt.Printf("prevent panic by handling failure accessing a path %q: %v\n", path, err)
-			return err
-		}
+func tree(count int, nodeFlg bool, lastFlg bool, format string, depthLevel int) {
+	p, _ := os.Getwd()
 
-		if d.IsDir() {
-			if cnt == 0 {
-				// through
-			} else {
-				paths = append(paths, filepath.Join(".", path))
-				notCurrentDirFlg = true
-				dirFlg = true
-			}
-		} else {
-			paths = append(paths, filepath.Join(".", path))
-			notCurrentDirFlg = true
-		}
-
-		if notCurrentDirFlg {
-			pcs = append(pcs, getPathCondition(path, dirFlg))
-		}
-		cnt++
-		return nil
-	})
+	infos, err := ioutil.ReadDir(p)
 	if err != nil {
-		fmt.Printf("error walking the path %q: %v\n", ".", err)
+		fmt.Println(err)
 	}
 
-	return paths, pcs
-}
-
-func displayTree(pcs []PathCondition) {
-	fmt.Println(".")
-	for _, pathcon := range pcs {
-		if pathcon.depth == 0 {
-			fmt.Printf("%s%s\n", DirBrunch, pathcon.filename)
-		} else {
-			var depthString string
-			for i := 0; i < pathcon.depth; i++ {
-				depthString += BrunchSpace
+	var brunchName string
+	brunchName += format
+	for cnt, info := range infos {
+		if info.IsDir() {
+			if cnt == count {
+				lastFlg = true
 			}
-			fmt.Printf("%s%s%s\n", depthString, DirBrunch, pathcon.filename)
+			fileString := stringFormat(nodeFlg, lastFlg)
+			fileName := format + fileString + " " + info.Name()
+			fmt.Println(fileName)
+			nodeFlg = true
+			/*
+				if cnt == count {
+					lastFlg = true
+				}
+			*/
+			os.Chdir(info.Name())
+			if lastFlg {
+				brunchName += DepthSpace
+			} else {
+				brunchName += BrunchSpace
+			}
+			execute(nodeFlg, lastFlg, brunchName, depthLevel+1)
+			os.Chdir(p)
+		} else {
+			if nodeFlg && lastFlg {
+				format = ""
+				if depthLevel > 1 {
+					format += BrunchSpace
+					depthLevel--
+				}
+				for i := 0; i < depthLevel; i++ {
+					format += DepthSpace
+				}
+			}
+			lastFlg = false
+			if cnt == count {
+				lastFlg = true
+			}
+			fileString := stringFormat(nodeFlg, lastFlg)
+			fileName := format + fileString + " " + info.Name()
+			fmt.Println(fileName)
 		}
 	}
+
+}
+
+func counter() int {
+	cnt := 0
+	p, _ := os.Getwd()
+
+	infos, err := ioutil.ReadDir(p)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	for a, _ := range infos {
+		cnt = a
+	}
+
+	return cnt
+}
+
+func execute(nodeFlg bool, lastFlg bool, format string, depthLevel int) {
+	count := counter()
+	tree(count, nodeFlg, lastFlg, format, depthLevel)
 }
 
 func main() {
-	_, pcs := dirWalker()
-	displayTree(pcs)
+	prevDir, _ := filepath.Abs(".")
+	fmt.Println(".")
+	execute(false, false, "", 0)
+	defer os.Chdir(prevDir)
 }
