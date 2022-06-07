@@ -106,12 +106,16 @@ func execute(nodeFlg bool, lastFlg bool, format string, depthLevel int) {
 }
 
 func main() {
+	var directory string
 	prevDir, _ := filepath.Abs(".")
 	if len(os.Args) > 1 {
-		fmt.Println(os.Args[1])
+		directory = os.Args[1]
 	} else {
-		fmt.Println(".")
+		directory = "."
 	}
+	fmt.Println(directory)
+	targetDir, _ := filepath.Abs(directory)
+	os.Chdir(targetDir)
 	execute(false, false, "", 0)
 	defer os.Chdir(prevDir)
 }
