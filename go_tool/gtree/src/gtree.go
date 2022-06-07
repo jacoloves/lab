@@ -40,6 +40,17 @@ func tree(count int, nodeFlg bool, lastFlg bool, format string, depthLevel int) 
 	var brunchName string
 	brunchName += format
 	for cnt, info := range infos {
+		/*
+			if info.Name() == "test1-1" {
+				fmt.Println("---test start---")
+				fmt.Println(format)
+				fmt.Println(nodeFlg)
+				fmt.Println(lastFlg)
+				fmt.Println(depthLevel)
+				fmt.Println("---test end---")
+			}
+		*/
+
 		if info.IsDir() {
 			if cnt == count {
 				lastFlg = true
@@ -62,14 +73,20 @@ func tree(count int, nodeFlg bool, lastFlg bool, format string, depthLevel int) 
 			execute(nodeFlg, lastFlg, brunchName, depthLevel+1)
 			os.Chdir(p)
 		} else {
+			format = ""
 			if nodeFlg && lastFlg {
 				format = ""
 				if depthLevel > 1 {
 					format += BrunchSpace
+					//format += DepthSpace
 					depthLevel--
 				}
 				for i := 0; i < depthLevel; i++ {
 					format += DepthSpace
+				}
+			} else if nodeFlg {
+				for i := 0; i < depthLevel; i++ {
+					format += BrunchSpace
 				}
 			}
 			lastFlg = false
