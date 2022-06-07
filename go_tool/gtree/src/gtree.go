@@ -107,7 +107,11 @@ func execute(nodeFlg bool, lastFlg bool, format string, depthLevel int) {
 
 func main() {
 	prevDir, _ := filepath.Abs(".")
-	fmt.Println(".")
+	if len(os.Args) > 1 {
+		fmt.Println(os.Args[1])
+	} else {
+		fmt.Println(".")
+	}
 	execute(false, false, "", 0)
 	defer os.Chdir(prevDir)
 }
