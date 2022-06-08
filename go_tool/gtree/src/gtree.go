@@ -40,16 +40,15 @@ func tree(count int, nodeFlg bool, lastFlg bool, format string, depthLevel int) 
 	var brunchName string
 	brunchName += format
 	for cnt, info := range infos {
-		/*
-			if info.Name() == "test1-1" {
-				fmt.Println("---test start---")
-				fmt.Println(format)
-				fmt.Println(nodeFlg)
-				fmt.Println(lastFlg)
-				fmt.Println(depthLevel)
-				fmt.Println("---test end---")
-			}
-		*/
+
+		if info.Name() == "test3-2" {
+			fmt.Println("---test start---")
+			fmt.Println(format)
+			fmt.Println(nodeFlg)
+			fmt.Println(lastFlg)
+			fmt.Println(depthLevel)
+			fmt.Println("---test end---")
+		}
 
 		if info.IsDir() {
 			if cnt == count {
@@ -75,7 +74,6 @@ func tree(count int, nodeFlg bool, lastFlg bool, format string, depthLevel int) 
 		} else {
 			format = ""
 			if nodeFlg && lastFlg {
-				format = ""
 				if depthLevel > 1 {
 					format += BrunchSpace
 					//format += DepthSpace
@@ -89,6 +87,16 @@ func tree(count int, nodeFlg bool, lastFlg bool, format string, depthLevel int) 
 					format += BrunchSpace
 				}
 			}
+			/*
+				if info.Name() == "test3-1" {
+					fmt.Println("---test start---")
+					fmt.Println(format)
+					fmt.Println(nodeFlg)
+					fmt.Println(lastFlg)
+					fmt.Println(depthLevel)
+					fmt.Println("---test end---")
+				}
+			*/
 			lastFlg = false
 			if cnt == count {
 				lastFlg = true
