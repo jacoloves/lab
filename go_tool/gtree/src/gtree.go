@@ -14,6 +14,22 @@ const (
 	DepthSpace  string = "    "
 )
 
+func stringDirFormat(nodeFlg, lastDirFlg bool) string {
+	var format string
+	if nodeFlg && lastDirFlg {
+		format = LastBrunch
+	} else if nodeFlg {
+		format = DirBrunch
+	} else if lastDirFlg {
+		format = LastBrunch
+	} else {
+		format = DirBrunch
+	}
+
+	return format
+
+}
+
 func stringFormat(nodeFlg bool, lastFlg bool) string {
 	var format string
 	if nodeFlg && lastFlg {
@@ -29,7 +45,7 @@ func stringFormat(nodeFlg bool, lastFlg bool) string {
 	return format
 }
 
-func tree(count int, nodeFlg bool, lastFlg bool, format string, depthLevel int) {
+func tree(count int, nodeFlg bool, lastFlg bool, format string, depthLevel int, lastDirFlg bool) {
 	p, _ := os.Getwd()
 
 	infos, err := ioutil.ReadDir(p)
@@ -52,9 +68,11 @@ func tree(count int, nodeFlg bool, lastFlg bool, format string, depthLevel int) 
 
 		if info.IsDir() {
 			if cnt == count {
-				lastFlg = true
+				lastDirFlg = true
+			} else {
+				lastDirFlg = false
 			}
-			fileString := stringFormat(nodeFlg, lastFlg)
+			fileString := stringDirFormat(nodeFlg, lastDirFlg)
 			fileName := format + fileString + " " + info.Name()
 			fmt.Println(fileName)
 			nodeFlg = true
@@ -64,16 +82,26 @@ func tree(count int, nodeFlg bool, lastFlg bool, format string, depthLevel int) 
 				}
 			*/
 			os.Chdir(info.Name())
-			if lastFlg {
+			if lastDirFlg {
 				brunchName += DepthSpace
 			} else {
 				brunchName += BrunchSpace
 			}
-			execute(nodeFlg, lastFlg, brunchName, depthLevel+1)
+			execute(nodeFlg, lastFlg, brunchName, depthLevel+1, lastDirFlg)
 			os.Chdir(p)
 		} else {
+			/*
+				if info.Name() == "gtree_test.go" {
+					fmt.Println("---test start---")
+					fmt.Println(format)
+					fmt.Println(nodeFlg)
+					fmt.Println(lastFlg)
+					fmt.Println(depthLevel)
+					fmt.Println("---test end---")
+				}
+			*/
 			format = ""
-			if nodeFlg && lastFlg {
+			if nodeFlg && lastDirFlg {
 				if depthLevel > 1 {
 					format += BrunchSpace
 					//format += DepthSpace
@@ -88,7 +116,7 @@ func tree(count int, nodeFlg bool, lastFlg bool, format string, depthLevel int) 
 				}
 			}
 			/*
-				if info.Name() == "test3-1" {
+				if info.Name() == "gtree_test.go" {
 					fmt.Println("---test start---")
 					fmt.Println(format)
 					fmt.Println(nodeFlg)
@@ -100,6 +128,9 @@ func tree(count int, nodeFlg bool, lastFlg bool, format string, depthLevel int) 
 			lastFlg = false
 			if cnt == count {
 				lastFlg = true
+			}
+			if depthLevel == 1 && nodeFlg && lastDirFlg {
+				format = DepthSpace
 			}
 			fileString := stringFormat(nodeFlg, lastFlg)
 			fileName := format + fileString + " " + info.Name()
@@ -125,9 +156,9 @@ func counter() int {
 	return cnt
 }
 
-func execute(nodeFlg bool, lastFlg bool, format string, depthLevel int) {
+func execute(nodeFlg bool, lastFlg bool, format string, depthLevel int, lastDirFlg bool) {
 	count := counter()
-	tree(count, nodeFlg, lastFlg, format, depthLevel)
+	tree(count, nodeFlg, lastFlg, format, depthLevel, lastDirFlg)
 }
 
 func main() {
@@ -141,6 +172,6 @@ func main() {
 	fmt.Println(directory)
 	targetDir, _ := filepath.Abs(directory)
 	os.Chdir(targetDir)
-	execute(false, false, "", 0)
+	execute(false, false, "", 0, false)
 	defer os.Chdir(prevDir)
 }
