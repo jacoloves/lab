@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
+	"sort"
 )
 
 const (
@@ -12,166 +13,99 @@ const (
 	LastBrunch  string = "└──"
 	BrunchSpace string = "│   "
 	DepthSpace  string = "    "
+	ResetColor  string = "\x1b[0m"
 )
 
-func stringDirFormat(nodeFlg, lastDirFlg bool) string {
-	var format string
-	if nodeFlg && lastDirFlg {
-		format = LastBrunch
-	} else if nodeFlg {
-		format = DirBrunch
-	} else if lastDirFlg {
-		format = LastBrunch
-	} else {
-		format = DirBrunch
-	}
-
-	return format
-
+type Counter struct {
+	dirs  int
+	files int
 }
 
-func stringFormat(nodeFlg bool, lastFlg bool) string {
-	var format string
-	if nodeFlg && lastFlg {
-		format = LastBrunch
-	} else if nodeFlg {
-		format = DirBrunch
-	} else if lastFlg {
-		format = LastBrunch
+func (counter *Counter) index(path string) {
+	stat, _ := os.Stat(path)
+	if stat.IsDir() {
+		counter.dirs += 1
 	} else {
-		format = DirBrunch
+		counter.files += 1
 	}
-
-	return format
 }
 
-func tree(count int, nodeFlg bool, lastFlg bool, format string, depthLevel int, lastDirFlg bool) {
-	p, _ := os.Getwd()
+func (counter *Counter) output() string {
+	return fmt.Sprintf("\n%d directories, %d files", counter.dirs, counter.files)
+}
 
-	infos, err := ioutil.ReadDir(p)
+func dirnamesFrom(base string) []string {
+	file, err := os.Open(base)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	var brunchName string
-	brunchName += format
-	for cnt, info := range infos {
+	names, _ := file.Readdirnames(0)
+	file.Close()
 
-		if info.Name() == "test3-2" {
-			fmt.Println("---test start---")
-			fmt.Println(format)
-			fmt.Println(nodeFlg)
-			fmt.Println(lastFlg)
-			fmt.Println(depthLevel)
-			fmt.Println("---test end---")
-		}
+	sort.Strings(names)
+	return names
+}
 
-		if info.IsDir() {
-			if cnt == count {
-				lastDirFlg = true
-			} else {
-				lastDirFlg = false
-			}
-			fileString := stringDirFormat(nodeFlg, lastDirFlg)
-			fileName := format + fileString + " " + info.Name()
-			fmt.Println(fileName)
-			nodeFlg = true
-			/*
-				if cnt == count {
-					lastFlg = true
+func color(path string) string {
+	stat, _ := os.Stat(path)
+	arr := [...]string{"Makefile", "go.mod", "go.sum"}
+	if stat.IsDir() {
+		return "\x1b[38;2;176;196;222m"
+	} else {
+		extensionName := filepath.Ext(path)
+		switch extensionName {
+		case ".go":
+			return "\x1b[38;2;0;250;154m"
+		case ".c":
+			return "\x1b[38;2;255;215;0m"
+		case ".md", ".txt":
+			return "\x1b[38;2;255;140;0m\x1b[4m"
+		default:
+			_, file := filepath.Split(path)
+			for _, v := range arr {
+				if file == v {
+					return "\x1b[38;2;255;140;0m\x1b[4m"
 				}
-			*/
-			os.Chdir(info.Name())
-			if lastDirFlg {
-				brunchName += DepthSpace
-			} else {
-				brunchName += BrunchSpace
 			}
-			execute(nodeFlg, lastFlg, brunchName, depthLevel+1, lastDirFlg)
-			os.Chdir(p)
+			return ""
+		}
+	}
+}
+
+func tree(counter *Counter, base string, prefix string) {
+	names := dirnamesFrom(base)
+
+	for index, name := range names {
+		if name[0] == '.' {
+			continue
+		}
+		subpath := path.Join(base, name)
+		counter.index(subpath)
+
+		if index == len(names)-1 {
+			colorStr := color(subpath)
+			fmt.Printf("%s %s%s%s\n", (prefix + LastBrunch), colorStr, name, ResetColor)
+			tree(counter, subpath, prefix+DepthSpace)
 		} else {
-			/*
-				if info.Name() == "gtree_test.go" {
-					fmt.Println("---test start---")
-					fmt.Println(format)
-					fmt.Println(nodeFlg)
-					fmt.Println(lastFlg)
-					fmt.Println(depthLevel)
-					fmt.Println("---test end---")
-				}
-			*/
-			format = ""
-			if nodeFlg && lastDirFlg {
-				if depthLevel > 1 {
-					format += BrunchSpace
-					//format += DepthSpace
-					depthLevel--
-				}
-				for i := 0; i < depthLevel; i++ {
-					format += DepthSpace
-				}
-			} else if nodeFlg {
-				for i := 0; i < depthLevel; i++ {
-					format += BrunchSpace
-				}
-			}
-			/*
-				if info.Name() == "gtree_test.go" {
-					fmt.Println("---test start---")
-					fmt.Println(format)
-					fmt.Println(nodeFlg)
-					fmt.Println(lastFlg)
-					fmt.Println(depthLevel)
-					fmt.Println("---test end---")
-				}
-			*/
-			lastFlg = false
-			if cnt == count {
-				lastFlg = true
-			}
-			if depthLevel == 1 && nodeFlg && lastDirFlg {
-				format = DepthSpace
-			}
-			fileString := stringFormat(nodeFlg, lastFlg)
-			fileName := format + fileString + " " + info.Name()
-			fmt.Println(fileName)
+			colorStr := color(subpath)
+			fmt.Printf("%s %s%s%s\n", (prefix + DirBrunch), colorStr, name, ResetColor)
+			tree(counter, subpath, prefix+BrunchSpace)
 		}
 	}
-
-}
-
-func counter() int {
-	cnt := 0
-	p, _ := os.Getwd()
-
-	infos, err := ioutil.ReadDir(p)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	for a, _ := range infos {
-		cnt = a
-	}
-
-	return cnt
-}
-
-func execute(nodeFlg bool, lastFlg bool, format string, depthLevel int, lastDirFlg bool) {
-	count := counter()
-	tree(count, nodeFlg, lastFlg, format, depthLevel, lastDirFlg)
 }
 
 func main() {
 	var directory string
-	prevDir, _ := filepath.Abs(".")
 	if len(os.Args) > 1 {
 		directory = os.Args[1]
 	} else {
 		directory = "."
 	}
+
+	counter := new(Counter)
 	fmt.Println(directory)
-	targetDir, _ := filepath.Abs(directory)
-	os.Chdir(targetDir)
-	execute(false, false, "", 0, false)
-	defer os.Chdir(prevDir)
+
+	tree(counter, directory, "")
+	fmt.Println(counter.output())
 }
