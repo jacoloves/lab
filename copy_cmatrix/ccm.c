@@ -26,18 +26,19 @@ int main(int argc, char *argv[]) {
     int firstcoldone = 0;
     int random = 0;
     int update = 4;
-    int highnum = 0;
     iint mcolor = COLOR_GREEN;
     int rainbow = 0;
     int lambda = 0;
-    int randnum = 0;
-    int randmin = 0;
     int pause = 0;
     int classic = 0;
     int changes = 0;
     char *msg = "";
     char *tty = NULL;
     */
+
+    int highnum = 0;
+    int randmin = 0;
+    int randnum = 0;
 
     srand((unsigned) time(NULL));
     setlocale(LC_ALL, "");
@@ -79,4 +80,11 @@ int main(int argc, char *argv[]) {
             init_pair(COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW);
         }
     }
+    
+    // set up values for random number generation
+    randmin  = 33;
+    highnum = 123;
+    randnum = highnum - randmin; 
+
+    //var_init();
 }
