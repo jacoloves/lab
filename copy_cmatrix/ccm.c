@@ -15,10 +15,10 @@
 #endif
 
 int main(int argc, char *argv[]) {
+    /*
     int i, y, z, opychr, keyperss;
     int j = 0;
     int count = 0;
-    /*
     int screensaver = 0;
     int asynch = 0;
     int bold = 0;
@@ -44,5 +44,7 @@ int main(int argc, char *argv[]) {
 
     // process start
     initscr();
+    savetty();
+    nonl();
 
 }
