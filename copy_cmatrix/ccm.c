@@ -46,5 +46,6 @@ int main(int argc, char *argv[]) {
     initscr();
     savetty();
     nonl();
+    cbreak();
 
 }
