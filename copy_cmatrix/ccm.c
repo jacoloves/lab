@@ -46,7 +46,15 @@ void c_die(char *msg, ...) {
     if (console) {
 #ifdef HAVE_CONSOLECHARS
         va_system("consolechars -d");
+#elif defined(HAVE_SETFONT)
+        va_system("setfont");
+#endif
     }
+
+    va_start(ap, msg);
+    vfprintf(stderr, msg, ap);
+    va_end(ap);
+    exit(0);
 
 
 }
