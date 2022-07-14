@@ -14,6 +14,64 @@
 #include <unistd.h>
 #endif
 
+typedef struct cmatrix {
+    int val;
+    bool is_head;
+} cmatrix;
+
+// global variables
+cmatrix **matrix = (cmatrix **) NULL;
+int console = 0;
+
+int va_system(char *str, ...) {
+    va_list ap;
+    char buf[133];
+
+    va_start(ap, str);
+    vsnprintf(buf, sizeof(buf), str, ap);
+    va_end(ap);
+    return system(buf);
+}
+
+void c_die(char *msg, ...) {
+    
+    va_list ap;
+
+    curs_set(1);
+    clear();
+    refresh();
+    resetty();
+    endwin();
+
+    if (console) {
+#ifdef HAVE_CONSOLECHARS
+        va_system("consolechars -d");
+    }
+
+
+}
+
+void nmalloc(size_t howmuch) {
+    void *r;
+
+    if (!(r = malloc(howmuch))) {
+        c_die("CMatrix: malloc: out of memory!");
+    }
+
+    return r;
+}
+
+void var_init() {
+    int i, j;
+
+    if (matrix != NULL) {
+        free(matrix[0]);
+        free(matrix);
+    }
+
+    matrix = nmalloc(sizeof())
+}
+
 int main(int argc, char *argv[]) {
     /*
     int i, y, z, opychr, keyperss;
