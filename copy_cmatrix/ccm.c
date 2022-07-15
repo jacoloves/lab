@@ -22,6 +22,9 @@ typedef struct cmatrix {
 // global variables
 cmatrix **matrix = (cmatrix **) NULL;
 int console = 0;
+int *length = NULL;
+int *spaces = NULL;
+int *updates = NULL;
 
 int va_system(char *str, ...) {
     va_list ap;
@@ -77,7 +80,42 @@ void var_init() {
         free(matrix);
     }
 
-    matrix = nmalloc(sizeof())
+    matrix = nmalloc(sizeof(cmatrix *) * (LINES + 1));
+    matrix[0] = nmalloc(sizeof(cmatrix) * (LINES + 1) * COLS);
+    for (i = 1; i <= LINES; i++) {
+        matrix[i] = matrix[i - 1] + COLS;
+    }
+
+    if (length != NULL) {
+        free(length);
+    }
+    length = nmalloc(COLS * sizeof(int));
+
+    if (spaces != NULL) {
+        free(spaces);
+    }
+    spaces = nmalloc(COLS* sizeof(int));
+
+    if (updates != NULL) {
+        free(updates);
+    }
+    updates = nmalloc(COLS * sizeof(int));
+
+    for (i = 0; i <= LINES; i++) {
+        for (j = 0; j <= COLS - 1; j += 2) {
+            matrix[i][j] = -1;
+        }
+    }
+
+    for (j = 0; j <= COLS - 1; j += 2) {
+        spaces[j] = (int) rand() % LINES + 1;
+
+        length[j] = (int) rand() % (LINES - 3) + 3;
+
+        matrix[1][j].val = ' ';
+
+        updates[j] = (int) rand() % 3 + 1;
+    }
 }
 
 int main(int argc, char *argv[]) {
