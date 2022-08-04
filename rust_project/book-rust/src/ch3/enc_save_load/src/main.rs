@@ -18,5 +18,7 @@ fn save_sjis(filename: &str, text: &str) {
 }
 
 fn load_sjis(filename: &str) -> String {
-    let buf = fs::read
+    let buf = fs::read(filename).expect("road");
+    let (dec, _, _) = encoding_rs::SHIFT_JIS.decode(&buf);
+    return dec.into_owned();
 }
