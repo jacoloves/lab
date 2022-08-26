@@ -1,15 +1,16 @@
 @charset "UTF-8";
 body {
-    background-color: #fffeee;
+    background-color: #fee;
 }
 
 h1 {
- 
+    background-color: #faa;
     color: #0bd;
 }
 
 p {
     font-size: 20px;
+    color: rgba(10, 130, 165, .5)
 }
 
 div p {
@@ -17,7 +18,9 @@ div p {
 }
 
 h2 {
-    font-family: "遊ゴシック体", "Yu Gothic", YuGothic, sans-serif;
+    /* font-family: "遊ゴシック体", "Yu Gothic", YuGothic, sans-serif; */
+    font-family: "M PLUS 1p";
+    color: navy;
 }
 
 .cat-str {
