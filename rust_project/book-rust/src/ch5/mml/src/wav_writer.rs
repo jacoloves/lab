@@ -1,16 +1,16 @@
-use std::f32::consts::PI
+use std::f32::consts::PI;
 use hound::WavWriter;
 use std::io::{Write, Seek};
 
 const SAMPLE_RATE: f32 = 44100.0;
 
-#[derive(debug)]
+#[derive(Debug)]
 pub struct Note {
     pub no: i32,
     pub len: i32,
 }
 
-pub fn write(filenmae: &str, notes: Vec<Note>, bpm: f32) {
+pub fn write(filename: &str, notes: Vec<Note>, bpm: f32) {
     let spec = hound::WavSpec {
         channels: 1,
         sample_rate: SAMPLE_RATE as u32,
@@ -29,13 +29,13 @@ pub fn write(filenmae: &str, notes: Vec<Note>, bpm: f32) {
 }
 
 fn write_tone<W>(fw: &mut WavWriter<W>, tone: f32, len: u32)
-    where W: Write + Seek {
-        for t in 0..len {
+where W: Write + Seek {
+    for t in 0..len {
             let a = t as f32 / SAMPLE_RATE;
             let v = (a * tone * 2.0 * PI).sin();
             fw.write_sample((v * i16::MAX as f32) as i16).unwrap();
-        }
     }
+}
 
 #[cfg(test)]
 mod wav_writer_test {
