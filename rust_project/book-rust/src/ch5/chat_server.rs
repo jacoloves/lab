@@ -1,12 +1,12 @@
 use std::net::{TcpListener, TcpStream};
-use std::io::{BufReader, BufRead, Write};
+use std::io::{BufReader,BufRead,Write};
 use std::thread;
 use std::sync::mpsc;
 use std::time::Duration;
 
 fn main() {
-    let server_addr= "127.0.0.1:8888";
-    let (tx, rx) = mspc::channel::<String>();
+    let server_addr = "127.0.0.1:8888";
+    let (tx, rx) = mpsc::channel::<String>();
     let mut clients: Vec<TcpStream> = Vec::new();
 
     let server = TcpListener::bind(server_addr)
@@ -22,6 +22,7 @@ fn main() {
         }
 
         if let Ok(msg) = rx.try_recv() {
+            println!("all send: {}", msg.trim());
             clients = send_all(clients, &msg);
         }
         thread::sleep(Duration::from_millis(100));
@@ -39,9 +40,9 @@ fn start_thread(client: TcpStream, tx: mpsc::Sender<String>) {
     });
 }
 
-fn send_all(clients: Vec<TcpStram>, s: &str) -> Vec<TcpStream> {
+fn send_all(clients: Vec<TcpStream>, s: &str) -> Vec<TcpStream> {
     let mut collector = vec![];
-    for mut socket in clinets.into_iter() {
+    for mut socket in clients.into_iter() {
         let bytes = String::from(s).into_bytes();
         if let Err(e) = socket.write_all(&bytes) {
             println!("send error: {}", e);
