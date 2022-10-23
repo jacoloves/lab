@@ -2,7 +2,7 @@
 pub enum Node {
     Nop,
     Number(i64),
-    Calc(char, Boc<Node>, Box<Node>).
+    Calc(char, Box<Node>, Box<Node>),
     If(Box<Node>, Box<Vec<Node>>, Box<Vec<Node>>),
     For(String, i64, i64, Box<Vec<Node>>),
     Print(Box<Node>),

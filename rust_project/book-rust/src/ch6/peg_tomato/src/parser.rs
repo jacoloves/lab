@@ -9,7 +9,7 @@ peg::parser!(pub grammar tomato() for str {
         = sentence() ** end_of_line()
 
     rule sentence() -> Node
-        = print() / if() / for() / let() / _ { Node:Nop }
+        = print() / if() / for() / let() / _ { Node::Nop }
 
     rule print() -> Node
         = "print" _ "\"" v:$([^ '"']*) "\""
@@ -28,18 +28,18 @@ peg::parser!(pub grammar tomato() for str {
         { Node::if_(cond, t, f) }
     rule if_true_only() -> Node
         = cond:calc() t:block()
-        { Bode::if_(cond, t, vec![]) }
+        { Node::if_(cond, t, vec![]) }
     rule block() -> Vec<Node>
         = "{" _ v:sentences() _ "}" _ { v }
 
     rule for() -> Node
-        = "for" _ w:word() _ "=" _ start:number() a_rc
+        = "for" _ w:word() _ "=" _ start:number() _
             "to" _ end:number() _ body:block()
         { Node::For(w, start, end, Box::new(body)) }
         
     rule let() -> Node
         = w:word() _ "=" _ v:calc()
-        { Node::SetVar(W, Box::new(body)) }
+        { Node::SetVar(w, Box::new(v)) }
 
     rule calc() -> Node = comp()
     rule comp() -> Node
@@ -72,4 +72,4 @@ peg::parser!(pub grammar tomato() for str {
     rule end_of_line() = [';' | '\n']+ _
     rule lf() = _ ['\n']* _
     rule _ = [' ' | '\t']*
-})
+});
