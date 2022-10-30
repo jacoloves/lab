@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html><meta charset="utf-8">
+    <body>
+        <script type="module">
+            import init, {encrypt, decrypt} from './pkg/cipher_browser.js';
+            init().then(() => {
+                window.encrypt = encrypt;
+                window.decrypt = decrypt;
+            });
+        </script>
+        <h1>encryption tool</h1>
+        <div>
+            input:<br>
+            <textarea id="inbox" cols="60" rows="8"></textarea><br>
+            password:
+            <input type="password" id="password"><br>
+            <button onclick="enc_click()">encrypt</button>
+            <button onclick="dec_click()">decrypt</button><br>
+            output:<br>
+            <textarea id="outbox" cols="60" rows="8"></textarea>
+        </div>
+        <script>
+            const q = (query) => {
+                return document.querySelector(query);
+            };
+            function enc_click() {
+                console.log(q("#inbox"));
+                q("#outbox").value = window.encrypt (
+                    q("#password").value, q("#inbox").value
+                );
+            }
+
+            function dec_click() {
+                q("#outbox").value = window.decrypt (
+                    q("#password").value, q("#inbox").value
+                );
+            }
+        </script>
+    </body>
+</html>
