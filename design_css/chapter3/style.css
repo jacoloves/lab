@@ -1,0 +1,97 @@
+@charset "UTF-8";
+body {
+    /* background-color: #fee;
+    background-image: url(images/images.jpeg);
+    background-repeat: no-repeat; */
+    /* background-size: contain; */
+    height: 100vh;
+    /* background-position: 30px 80px; */
+    background: #07a2dc url(images/images.jpeg) no-repeat center bottom/cover;
+}
+
+h1 {
+    background-color: #faa;
+    color: #0bd;
+}
+
+p {
+    font-size: 20px;
+    color: rgba(10, 130, 165, .5);
+    /* border-width: solid; */
+    border-width: 1px;
+    border-style: solid;
+    border-color: tomato;
+    border-bottom: 2px solid #0bd;
+}
+
+div p {
+    color: red;
+}
+
+h2 {
+    /* font-family: "遊ゴシック体", "Yu Gothic", YuGothic, sans-serif; */
+    font-family: "M PLUS 1p";
+    color: navy;
+}
+
+.cat-str {
+    font-family: "ヒラギノ丸ゴ Pro W4", "Hiragino Maru Gothic Pro", sans-serif;
+}
+
+.bold-str {
+    font-weight: bold;
+}
+
+div {
+    background: #0bd;
+    width: 500px;
+    height: 300px;
+    /* margin-top: 30px;
+    margin-left: 100px; */
+    margin: 30px 0 0 100px;
+    padding: 40px;
+    /* border-width: 1px 4px 8px 12px; */
+    /* border-style: solid; */
+    border-width: 4px;
+    /* border-style: double dotted solid ridge; */
+    border-style: solid;
+    border-color: tan #0bd tomato #000;
+    border: 5px dotted tomato;
+}
+
+ul {
+    /* list-style-type: square; */
+    list-style-position: outside;
+}
+
+ol {
+    /* list-style-type: hiragana; */
+    list-style-position: inside;
+}
+
+.blue {
+    color: #0bd
+}
+
+#orange {
+    color: #fa2;
+}
+
+p.blue2 {
+    color: tomato;
+}
+
+#blue3 {
+    color: #0bd;
+}
+
+.orange2 {
+    color:#fa2;
+}
+
+.item {
+    background: #0bd;
+    color: #fff;
+    margin: 10px;
+    padding: 10px;
+}
